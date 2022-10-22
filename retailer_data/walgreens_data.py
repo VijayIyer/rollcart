@@ -115,7 +115,29 @@ def get_store_locator_request_results(url: str, lat: str, long: str, radius: int
 
 
 def get_product_search_results(url: str, search_term: str, store_number: str) -> requestResult:
-    pass
+    if validators.url(url):
+        data = {
+            "p": "1",
+            "s": "72",
+            "sort": "relevance",
+            "view": "allView",
+            "geoTargetEnabled": "true",
+            "q": str(search_term),
+            "requestType": "search",
+            "deviceType": "desktop",
+            "includeDrug": "true",
+            "inStore": "true",
+            "storeId": str(store_number),
+            "searchTerm": str(search_term)
+        }
+        resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
+                             json=data)
+        if resp.status_code == 200:
+            return requestResult(True, resp.json())
+        else:
+            return requestResult(False, dict())
+    else:
+        return requestResult(False, dict())
 
 
 def get_walgreens_products(search_term: str,
@@ -128,41 +150,19 @@ def get_walgreens_products(search_term: str,
                                              long=long,
                                              radius=radius)
     if resp.success:
-        # resp = requests.post(WALGREENS_STORESEARCH_ENDPOINT,
-        #                      data={
-        #                          "lat": lat,
-        #                          "lng": long,
-        #                          "p": "1",
-        #                          "r": radius,
-        #                          "requestType": "header",
-        #                          "requestor": "headerui",
-        #                          "sameday": "true",
-        #                      })
-
         data = resp.data
+        # replace with logger
         print(data)
         store_number = data['results'][0]['store']['storeNumber']
     else:
         return []
+    # replace with logger
     print(store_number)
-
-    resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
-                         json={
-                             "p": "1",
-                             "s": "72",
-                             "sort": "relevance",
-                             "view": "allView",
-                             "geoTargetEnabled": "true",
-                             "q": str(search_term),
-                             "requestType": "search",
-                             "deviceType": "desktop",
-                             "includeDrug": "true",
-                             "inStore": "true",
-                             "storeId": str(store_number),
-                             "searchTerm": str(search_term)
-                         })
-    if resp.status_code == 200:
-        data = resp.json()
+    resp = get_product_search_results(url=WALGREENS_PRODUCTSEARCH_ENDPOINT,
+                                      search_term=search_term,
+                                      store_number=store_number)
+    if resp.success:
+        data = resp.data
         print(data.keys())
         for product in data['products']:
             if 'productInfo' in product.keys():
