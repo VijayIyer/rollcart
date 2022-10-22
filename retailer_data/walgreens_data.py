@@ -29,10 +29,11 @@ class requestResult:
 
 
 class Product:
-    def __init__(self, name: str, upc: str, price: str) -> None:
+    def __init__(self, name: str, upc: str, price: str, url: str = '') -> None:
         self.name = name
         self.upc = upc
         self.price = price
+        self.url = url
 
 
 def fetch_products(search_term: str) -> List[Product]:
@@ -152,7 +153,8 @@ def get_walgreens_products(search_term: str,
     if resp.success:
         data = resp.data
         # replace with logger
-        print(data)
+        # print(data)
+        # change with nearest store logic
         store_number = data['results'][0]['store']['storeNumber']
     else:
         return []
@@ -163,44 +165,51 @@ def get_walgreens_products(search_term: str,
                                       store_number=store_number)
     if resp.success:
         data = resp.data
-        print(data.keys())
+        # replace with logger
+        # print(data.keys())
+        print(len(data['products']))
+
+        # print(data['products'])
         for product in data['products']:
             if 'productInfo' in product.keys():
+
                 if 'storeInv' in product['productInfo'].keys():
                     if product['productInfo']['storeInv'] == 'outofstock':
                         continue
 
                     else:
-                        print(product['productInfo']['priceInfo'])
+                        # print(product['productInfo']['priceInfo'])
                         # this is where desired fields can be added
                         new_product = Product(product['productInfo']['productName'],
                                               product['productInfo']['upc'],
-                                              product['productInfo']['priceInfo']['regularPrice'])
+                                              product['productInfo']['priceInfo']['regularPrice'],
+                                              BASE_URL+product['productInfo']['productURL'])
                         products.append(new_product)
                 else:
                     continue
             else:
-                continue
-            return products
+                return []
+        return products
     else:
         return []
 
 
-# to test the method
-parser = argparse.ArgumentParser()
-parser.add_argument('--search_term', type=str, required=True)
-parser.add_argument('--lat', type=float, required=True)
-parser.add_argument('--long', type=float, required=True)
-parser.add_argument('--radius', type=int)
-args = parser.parse_args()
-search_term = args.search_term
-lat = args.lat
-long = args.long
-radius = args.radius
-products: List[Product] = get_walgreens_products(
-    search_term=search_term,
-    lat=lat,
-    long=long,
-    radius=radius)
-for product in products:
-    print('{}:{}'.format(product.name, product.price))
+# to test the methods
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--search_term', type=str, required=True)
+# parser.add_argument('--lat', type=float, required=True)
+# parser.add_argument('--long', type=float, required=True)
+# parser.add_argument('--radius', type=int)
+# args = parser.parse_args()
+# search_term = args.search_term
+# lat = args.lat
+# long = args.long
+# radius = args.radius
+# products: List[Product] = get_walgreens_products(
+#     search_term=search_term,
+#     lat=lat,
+#     long=long,
+#     radius=radius)
+# for product in products:
+#     print('{},{},{},{}'.format(product.name,
+#           product.price, product.upc, product.url))
