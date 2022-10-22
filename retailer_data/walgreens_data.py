@@ -1,10 +1,13 @@
-from typing import List
+from cgitb import reset
+from typing import Dict, List, Tuple
 from bs4 import BeautifulSoup
 import requests
 import urllib3
 import urllib
 import json
 import argparse
+import pgeocode
+import validators
 
 WALGREENS_API_KEY = 'ZAvkGnCRXXuziCqrUGkvlvANLSZqvQYl'
 USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
@@ -17,6 +20,12 @@ BASE_API_STORE_LOCATOR_URL = "https://services.walgreens.com/api/stores/search/v
 WALGREENS_STORESEARCH_ENDPOINT = 'https://www.walgreens.com/locator/v1/stores/search'
 WALGREENS_PRODUCTSEARCH_ENDPOINT = 'https://www.walgreens.com/retailsearch/products/search'
 DEFAULT_STORE_RADIUS = 10
+
+
+class requestResult:
+    def __init__(self, success: bool, data: Dict) -> None:
+        self.success = success
+        self.data = data
 
 
 class Product:
@@ -75,29 +84,68 @@ def fetch_products_store_inventory_api(address: str):
     pass
 
 
+def get_latlong_from_zipcode(zipcode: str) -> Tuple[str, str]:
+    nomi = pgeocode.Nominatim('us')
+    try:
+        result = nomi.query_postal_code(zipcode)
+    # in case zipcode is ill-formed
+    except:
+        return (-1, -1)
+    return (result.latitude, result.longitude)
+
+
+def get_store_locator_request_results(url: str, lat: str, long: str, radius: int = 10) -> requestResult:
+    if validators.url(url):
+        data = {
+            "lat": lat,
+            "lng": long,
+            "p": "1",
+            "r": radius,
+            "requestType": "header",
+            "requestor": "headerui",
+            "sameday": "true",
+        }
+        resp = requests.post(url=url, data=data)
+        if resp.status_code == 200:
+            return requestResult(True, resp.json())
+        else:
+            return requestResult(False, dict())
+    else:
+        return requestResult(False, dict())
+
+
+def get_product_search_results(url: str, search_term: str, store_number: str) -> requestResult:
+    pass
+
+
 def get_walgreens_products(search_term: str,
                            lat: float,
                            long: float,
                            radius: int = DEFAULT_STORE_RADIUS) -> List[Product]:
     products: List[Product] = []
-    resp = requests.post(WALGREENS_STORESEARCH_ENDPOINT,
-                         data={
-                             "lat": lat,
-                             "lng": long,
-                             "p": "1",
-                             "r": radius,
-                             "requestType": "header",
-                             "requestor": "headerui",
-                             "sameday": "true",
-                         })
+    resp = get_store_locator_request_results(url=WALGREENS_STORESEARCH_ENDPOINT,
+                                             lat=lat,
+                                             long=long,
+                                             radius=radius)
+    if resp.success:
+        # resp = requests.post(WALGREENS_STORESEARCH_ENDPOINT,
+        #                      data={
+        #                          "lat": lat,
+        #                          "lng": long,
+        #                          "p": "1",
+        #                          "r": radius,
+        #                          "requestType": "header",
+        #                          "requestor": "headerui",
+        #                          "sameday": "true",
+        #                      })
 
-    if resp.status_code == 200:
-        data = resp.json()
+        data = resp.data
         print(data)
         store_number = data['results'][0]['store']['storeNumber']
     else:
         return []
     print(store_number)
+
     resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
                          json={
                              "p": "1",
@@ -133,7 +181,7 @@ def get_walgreens_products(search_term: str,
                     continue
             else:
                 continue
-        return products
+            return products
     else:
         return []
 
