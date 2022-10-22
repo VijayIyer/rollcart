@@ -1,15 +1,22 @@
-from math import prod
-import re
 from typing import List
 from bs4 import BeautifulSoup
 import requests
 import urllib3
+import urllib
 import json
 import argparse
 
+WALGREENS_API_KEY = 'ZAvkGnCRXXuziCqrUGkvlvANLSZqvQYl'
+USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
+# exposed API endpoints
 BASE_URL = "https://www.walgreens.com"
 RESULTS_URL = BASE_URL+"/search/results.jsp?"
 BASE_API_STORE_LOCATOR_URL = "https://services.walgreens.com/api/stores/search/v2"
+
+# endpoints as seen in developer tools while scraping
+WALGREENS_STORESEARCH_ENDPOINT = 'https://www.walgreens.com/locator/v1/stores/search'
+WALGREENS_PRODUCTSEARCH_ENDPOINT = 'https://www.walgreens.com/retailsearch/products/search'
+DEFAULT_STORE_RADIUS = 10
 
 
 class Product:
@@ -41,38 +48,37 @@ def fetch_products(search_term: str) -> List[Product]:
 def fetch_products_store_inventory_api(address: str):
     http = urllib3.PoolManager()
     params = {
-        "apiKey": "ZAvkGnCRXXuziCqrUGkvlvANLSZqvQYl",
-        "affId": "",
-        "address": "4299 WINSTON AVE, Covington, KY",
-        "s": 5,
-        "p": 1,
-        "r": 5
+        "apiKey": WALGREENS_API_KEY,
+        "affId": "storesapi",
+        "zip": "47408",
+        "s": "5",
+        "p": "1",
+        "r": "5"
     }
-    r = http.request('POST', BASE_API_STORE_LOCATOR_URL,
-                     headers={
-                         "apiKey": "ZAvkGnCRXXuziCqrUGkvlvANLSZqvQYl"
-                     },
-                     fields=params)
-    print(r.data.decode())
+    r = urllib.request.Request(BASE_API_STORE_LOCATOR_URL,
+                               data=urllib.parse.urlencode(params).encode())
+    r.add_header('User-Agent', USER_AGENT)
+    r.add_header('apiKey', WALGREENS_API_KEY)
+    try:
+        resp = urllib.request.urlopen(r)
+        print(resp.read().decode())
+    except Exception as e:
+        print(e)
+
     # data = urllib3.parse.urlencode(params).encode()
     # print(data)
     # req = urllib3.request.Request(url=BASE_API_STORE_LOCATOR_URL)
     # req.add_header()
     # resp = urllib3.request.urlopen(req, data=data)
     # print(resp.read().decode())
-    print(r.data.decode('utf-8'))
+    # print(r.data.decode('utf-8'))
     pass
 
 
-WALGREENS_STORESEARCH_ENDPOINT = 'https://www.walgreens.com/locator/v1/stores/search'
-WALGREENS_PRODUCTSEARCH_ENDPOINT = 'https://www.walgreens.com/retailsearch/products/search'
-DEFAULT_STORE_RADIUS = 10
-
-
 def get_walgreens_products(search_term: str,
-                         lat: float,
-                         long: float,
-                         radius: int = DEFAULT_STORE_RADIUS) -> List[Product]:
+                           lat: float,
+                           long: float,
+                           radius: int = DEFAULT_STORE_RADIUS) -> List[Product]:
     products: List[Product] = []
     resp = requests.post(WALGREENS_STORESEARCH_ENDPOINT,
                          data={
@@ -87,6 +93,7 @@ def get_walgreens_products(search_term: str,
 
     if resp.status_code == 200:
         data = resp.json()
+        print(data)
         store_number = data['results'][0]['store']['storeNumber']
     else:
         return []
@@ -110,12 +117,22 @@ def get_walgreens_products(search_term: str,
         data = resp.json()
         print(data.keys())
         for product in data['products']:
-            if product['productInfo']['storeInv'] == 'outofstock':
+            if 'productInfo' in product.keys():
+                if 'storeInv' in product['productInfo'].keys():
+                    if product['productInfo']['storeInv'] == 'outofstock':
+                        continue
+
+                    else:
+                        print(product['productInfo']['priceInfo'])
+                        # this is where desired fields can be added
+                        new_product = Product(product['productInfo']['productName'],
+                                              product['productInfo']['upc'],
+                                              product['productInfo']['priceInfo']['regularPrice'])
+                        products.append(new_product)
+                else:
+                    continue
+            else:
                 continue
-            new_product = Product(product['productInfo']['productName'],
-                                  product['productInfo']['upc'],
-                                  product['productInfo']['priceInfo']['regularPrice'])
-            products.append(new_product)
         return products
     else:
         return []
@@ -123,19 +140,19 @@ def get_walgreens_products(search_term: str,
 
 # to test the method
 parser = argparse.ArgumentParser()
-parser.add_argument('--search_term', type=str)
-parser.add_argument('--lat', type=float)
-parser.add_argument('--long', type=float)
+parser.add_argument('--search_term', type=str, required=True)
+parser.add_argument('--lat', type=float, required=True)
+parser.add_argument('--long', type=float, required=True)
 parser.add_argument('--radius', type=int)
 args = parser.parse_args()
 search_term = args.search_term
 lat = args.lat
 long = args.long
 radius = args.radius
-products: List[Product] = get_walmart_products(
+products: List[Product] = get_walgreens_products(
     search_term=search_term,
     lat=lat,
     long=long,
     radius=radius)
 for product in products:
-    print(product.name)
+    print('{}:{}'.format(product.name, product.price))
