@@ -1,5 +1,5 @@
-from Retailers.util import read_ini
-from getProductPrices import Item, Retailer
+from backend.Retailers.util import read_ini
+from backend.getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
 import validators
