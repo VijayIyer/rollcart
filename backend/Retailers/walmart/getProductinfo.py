@@ -57,7 +57,3 @@ class Walmart(Retailer):
         print("Store id using is",self.params["store_id"])
         return response
 
-
-w = Walmart()
-out = w.getNearestStoreId("47408")
-print(out)
