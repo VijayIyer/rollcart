@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TypedDict
+from typing import List, TypedDict
 
 class Item(TypedDict):
     itemName: str
@@ -15,7 +15,7 @@ class Retailer(ABC):
         pass
 
     @abstractmethod
-    def getProductsInNearByStore(self, product: str, zipcode: str) -> list[Item]:
+    def getProductsInNearByStore(self, product: str, zipcode: str) -> List[Item]:
         # Sample response
         # [
             # {
