@@ -1,25 +1,26 @@
+from backend.Retailers.util import read_ini
+from backend.getProductPrices import Retailer
+import pandas as pd
 from serpapi import GoogleSearch
 import pgeocode
 from geopy.distance import geodesic
-import pandas as pd
-
-# TODO: Need to put these in an env file
-params = {
-    "api_key": "cb4579e10bb941b61ca774c9088b4e831df7e9714d917a36c301e5cc132e0e60",
-    "device": "desktop",
-    "engine": "walmart",
-}
 
 
-class Walmart:
+params = read_ini()
+api_key = params["WALMART"]["api_key"]
+device = params["WALMART"]["device"]
+engine = params["WALMART"]["engine"]
+
+
+class Walmart(Retailer):
     def __init__(self):
-        self.walmartStoreData = pd.read_csv("backend/walmart/walmartStoreData.csv")
+        self.walmartStoreData = pd.read_csv("Retailers/walmart/walmartStoreData.csv")
         self.dist = pgeocode.Nominatim("us")
         self.params = {
-            "api_key": "cb4579e10bb941b61ca774c9088b4e831df7e9714d917a36c301e5cc132e0e60",
-            "device": "desktop",
-            "engine": "walmart",
-        }
+            "api_key": api_key,
+            "device": device,
+            "engine": engine
+        } 
 
     def getNearestStoreId(self, userLocation):
         nearestStoreId = -1
@@ -46,15 +47,17 @@ class Walmart:
         for item in out["organic_results"]:
             response.append(
                 {
-                    "us_item_id": item["us_item_id"],
-                    "title": item["title"],
-                    "price": item["primary_offer"]["offer_price"],
+                    "itemId": item["us_item_id"],
+                    "itemName": item["title"],
+                    "itemPrice": item["primary_offer"]["offer_price"],
+                    "itemThumbnail":item["thumbnail"],
+                    "productPageUrl":item["product_page_url"]
                 }
             )
+        print("Store id using is",self.params["store_id"])
         return response
 
 
-# starter script
 w = Walmart()
-out = w.getProductsInNearByStore("eggs", "47408")
-print(out[:2])
+out = w.getNearestStoreId("47408")
+print(out)
