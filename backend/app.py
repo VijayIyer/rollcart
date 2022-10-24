@@ -1,7 +1,8 @@
 from distutils.log import debug
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, request
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
+from backend.Retailers.target.getProductInfo import Target
 
 app = Flask(__name__)
 
@@ -31,6 +32,15 @@ def walgreensTestEndPoint():
     w = Walgreens()
     return w.getProductsInNearByStore(args["q"], args["zipcode"])
 
+## TODO: Update target class to take in Retailer format like the others.
+@app.route('/targetTest')
+def targetTestEndPoint():
+   args = request.args
+
+   t = Target(args['zip'], args['upc'])
+   response = t.get_target_data()
+
+   return response
 
 if __name__ == '__main__':
     app.run(debug=True)
