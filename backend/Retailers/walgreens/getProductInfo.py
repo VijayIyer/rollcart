@@ -2,7 +2,6 @@ from backend.Retailers.util import read_ini
 from backend.getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
-import validators
 import pgeocode
 import requests
 from geopy.distance import geodesic
@@ -43,8 +42,7 @@ def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requ
 
 
 def getProductSearchResults(url: str, search_term: str, store_number: str) -> requestResult:
-    if validators.url(url):
-        data = {
+    data = {
             "p": "1",
             "s": "72",
             "sort": "relevance",
@@ -58,12 +56,10 @@ def getProductSearchResults(url: str, search_term: str, store_number: str) -> re
             "storeId": str(store_number),
             "searchTerm": str(search_term)
         }
-        resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
+    resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
                              json=data)
-        if resp.status_code == 200:
-            return requestResult(True, resp.json())
-        else:
-            return requestResult(False, dict())
+    if resp.status_code == 200:
+        return requestResult(True, resp.json())
     else:
         return requestResult(False, dict())
 
