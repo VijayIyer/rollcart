@@ -12,4 +12,4 @@ Run the flask app by running
 
 #### flask run
 
-Also, make sure to create a .env file with necessary configuration keys/values.
+Also, make sure to update config.ini with necessary configuration keys/values.
