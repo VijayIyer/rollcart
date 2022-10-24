@@ -3,4 +3,6 @@ google-search-results==2.4.1
 pgeocode==0.3.0
 geopy==2.2.0
 mypy==0.982
+requests==2.27.1
 typing_extensions==4.4.0
+
