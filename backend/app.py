@@ -1,5 +1,8 @@
+from crypt import methods
 from distutils.log import debug
+from urllib import response
 from flask import Flask, request
+from backend.Retailers.Kroger.getProductInfo import Kroger
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
 from backend.Retailers.target.getProductInfo import Target
@@ -41,6 +44,14 @@ def targetTestEndPoint():
    response = t.get_target_data()
 
    return response
+
+@app.route('/krogerTest',methods=['GET'])
+def krogerTestEndpoint():
+    k = Kroger()
+    args = request.args
+    return k.getProductsInNearByStore(args["q"], args["zipcode"])
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
