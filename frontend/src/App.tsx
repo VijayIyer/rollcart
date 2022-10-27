@@ -1,44 +1,32 @@
-import React, {useState, useEffect} from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import Header from './header/Header';
 
 function App() {
-  const [data, setData] = useState();
+  const [data, setData] = useState({ zipcode: '', query: '' });
 
-  useEffect(() => {
-    fetch("/intro").then(
-      res => res.json()
-    ).then(
-      data => {
-        setData(data)
-        console.log(data)
-      }
-    )
-  })
+  const handleUpdateZipcode = (zipcode: string) => {
+    setData({
+      ...data,
+      zipcode: zipcode,
+    });
+  };
+
+  const handleUpdateQuery = (query: string) => {
+    setData({
+      ...data,
+      query: query,
+    });
+  };
+
+  const handleSearchProducts = () => {};
 
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <div>
-          {(typeof data === 'undefined') ? (
-            <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-            >
-              Testing Grocery-budget app
-            </a>
-          ) : (
-            data["welcomeMessage"]
-          )}
-          
-        </div>
-      </header>
+      <Header
+        zipcode={data.zipcode}
+        query={data.query}
+        updateQuery={handleUpdateQuery}
+        updateZipcode={handleUpdateZipcode}></Header>
     </div>
   );
 }

@@ -3,9 +3,10 @@ from flask import Flask, request
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
 from backend.Retailers.target.getProductInfo import Target
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/intro')
 def index():
