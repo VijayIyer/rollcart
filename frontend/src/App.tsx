@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { DisplayItems } from './dataDisplay/dataDisplay';
 import Header from './header/Header';
+import { LoadingBar } from './loadingBar/loadingBar';
 import { GoogleAutoCompleteLocation } from './location/location';
 
 function App() {
@@ -25,10 +26,18 @@ function App() {
         setQuery={setQuery}
         setItemsToDisplay={setItemsToDisplay}
         location={location}
-        setDisplayLocationPopup={setDisplayLocationPopup}></Header>
-      <DisplayItems
+        setDisplayLocationPopup={setDisplayLocationPopup}
+        setIsLoading={setIsLoading}></Header>
+      {isLoading ? (
+        <LoadingBar />
+      ) : (
+        <DisplayItems
+          searchTerm={searchTerm}
+          items={itemsToDisplay.result}></DisplayItems>
+      )}
+      {/* <DisplayItems
         searchTerm={searchTerm}
-        items={itemsToDisplay.result}></DisplayItems>
+        items={itemsToDisplay.result}></DisplayItems> */}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}
         setDisplayLocationPopup={setDisplayLocationPopup}

@@ -34,6 +34,7 @@ export const GoogleAutoCompleteLocation = ({
             fontSize: '16px',
             borderRadius: '5px',
           }}
+          placeholder="Enter a zipcode"
           apiKey={mapsAPIKey}
           onPlaceSelected={place => {
             const zipcodeFromAddress =
@@ -55,7 +56,7 @@ export const GoogleAutoCompleteLocation = ({
       </div>
       {displayErrorMessage && (
         <h3 className="errorMessage">
-          <i className="fa fa-warning"></i> Please enter a zipcode{' '}
+          <i className="fa fa-warning"></i> Please enter a zipcode
         </h3>
       )}
     </div>

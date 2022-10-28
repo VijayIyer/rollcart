@@ -9,6 +9,7 @@ interface appProps {
   setQuery: any;
   setItemsToDisplay: any;
   setDisplayLocationPopup: any;
+  setIsLoading: any;
 }
 
 function Header(props: appProps) {
@@ -23,7 +24,8 @@ function Header(props: appProps) {
         setQuery={props.setQuery}
         setItemsToDisplay={props.setItemsToDisplay}
         zipcode={props.zipcode}
-        query={props.query}></SearchBar>
+        query={props.query}
+        setIsLoading={props.setIsLoading}></SearchBar>
       <Address
         setDisplayLocationPopup={props.setDisplayLocationPopup}
         location={props.location}></Address>
@@ -33,15 +35,24 @@ function Header(props: appProps) {
   );
 }
 
-function SearchBar({ setQuery, setItemsToDisplay, zipcode, query }: any) {
+function SearchBar({
+  setQuery,
+  setItemsToDisplay,
+  zipcode,
+  query,
+  setIsLoading,
+}: any) {
   const handleSearchProductsClicked = async () => {
     try {
+      setIsLoading(true);
       const { data } = await axios.get(
         `http://127.0.0.1:5000/walmartTest?q=${query}&zipcode=${47408}`,
       );
       setItemsToDisplay({ result: data });
     } catch (error: any) {
       console.log(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
