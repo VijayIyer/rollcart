@@ -5,8 +5,10 @@ import axios from 'axios';
 interface appProps {
   zipcode: string;
   query: string;
-  updateQuery: (s: string) => void;
-  updateZipcode: (s: string) => void;
+  location: string;
+  setQuery: any;
+  setItemsToDisplay: any;
+  setDisplayLocationPopup: any;
 }
 
 function Header(props: appProps) {
@@ -17,47 +19,51 @@ function Header(props: appProps) {
         <div className="logoTitle">roll</div>
         <div className="logoTitle">cart</div>
       </a>
-      <SearchBar updateQuery={props.updateQuery}></SearchBar>
-      <Address></Address>
+      <SearchBar
+        setQuery={props.setQuery}
+        setItemsToDisplay={props.setItemsToDisplay}
+        zipcode={props.zipcode}
+        query={props.query}></SearchBar>
+      <Address
+        setDisplayLocationPopup={props.setDisplayLocationPopup}
+        location={props.location}></Address>
       <AddList></AddList>
       <Login></Login>
     </div>
   );
 }
 
-function SearchBar({ updateQuery }: any) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [err, setErr] = useState('');
+function SearchBar({ setQuery, setItemsToDisplay, zipcode, query }: any) {
+  const handleSearchProductsClicked = async () => {
+    try {
+      const { data } = await axios.get(
+        `http://127.0.0.1:5000/walmartTest?q=${query}&zipcode=${47408}`,
+      );
+      setItemsToDisplay({ result: data });
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
 
-  // const handleSearchItemClicked = async (e: any) => {
-  //   setIsLoading(true);
-  //   try {
-  //     const { data } = await axios.get(
-  //       'http://127.0.0.1:5000/walmartTest?q=chicken&zipcode=47408',
-  //     );
-  //     setData(data);
-  //     console.log(data);
-  //   } catch (error: any) {
-  //     console.log(error);
-  //     setErr(error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
   const handleChange = (e: any) => {
-    updateQuery(e.target.value);
+    setQuery(e.target.value);
   };
-  const handleSearchItemClicked = (e: any) => {
-    // set;
+
+  const handleKeyDown = (e: any) => {
+    if (e.key === 'Enter') {
+      handleSearchProductsClicked();
+    }
   };
+
   return (
     <div className="searchBar">
       <div className="searchBarForm">
         <input
           className="searchBarInput"
           placeholder="Search products"
-          onChange={handleChange}></input>
-        <button className="searchButton" onClick={handleSearchItemClicked}>
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}></input>
+        <button className="searchButton" onClick={handleSearchProductsClicked}>
           <i className="fa-solid fa-magnifying-glass"></i>
         </button>
       </div>
@@ -65,12 +71,14 @@ function SearchBar({ updateQuery }: any) {
   );
 }
 
-function Address() {
+function Address({ setDisplayLocationPopup, location }: any) {
   return (
     <div className="addressBar">
-      <button className="addressBarButton">
+      <button
+        className="addressBarButton"
+        onClick={() => setDisplayLocationPopup(true)}>
         <i className="fa-solid fa-location-dot"> </i>
-        <span className="address"> 120 Kingson Drive South</span>
+        <span className="address"> {location}</span>
       </button>
     </div>
   );

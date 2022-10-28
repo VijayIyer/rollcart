@@ -1,32 +1,39 @@
+import axios from 'axios';
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { DisplayItems } from './dataDisplay/dataDisplay';
 import Header from './header/Header';
+import { GoogleAutoCompleteLocation } from './location/location';
 
 function App() {
-  const [data, setData] = useState({ zipcode: '', query: '' });
+  const [zipcode, setZipcode] = useState('47408');
+  const [query, setQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [itemsToDisplay, setItemsToDisplay] = useState({ result: [] });
+  const [displayLocationPopUp, setDisplayLocationPopup] = useState(false);
+  const [location, setLocation] = useState('120 Kingston Drive South, 47408');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUpdateZipcode = (zipcode: string) => {
-    setData({
-      ...data,
-      zipcode: zipcode,
-    });
-  };
-
-  const handleUpdateQuery = (query: string) => {
-    setData({
-      ...data,
-      query: query,
-    });
-  };
-
-  const handleSearchProducts = () => {};
+  useEffect(() => {
+    setSearchTerm(query);
+  }, [itemsToDisplay]);
 
   return (
     <div className="App">
       <Header
-        zipcode={data.zipcode}
-        query={data.query}
-        updateQuery={handleUpdateQuery}
-        updateZipcode={handleUpdateZipcode}></Header>
+        zipcode={zipcode}
+        query={query}
+        setQuery={setQuery}
+        setItemsToDisplay={setItemsToDisplay}
+        location={location}
+        setDisplayLocationPopup={setDisplayLocationPopup}></Header>
+      <DisplayItems
+        searchTerm={searchTerm}
+        items={itemsToDisplay.result}></DisplayItems>
+      <GoogleAutoCompleteLocation
+        displayLocationPopUp={displayLocationPopUp}
+        setDisplayLocationPopup={setDisplayLocationPopup}
+        setLocation={setLocation}
+        setZipcode={setZipcode}></GoogleAutoCompleteLocation>
     </div>
   );
 }
