@@ -1,4 +1,5 @@
 from distutils.log import debug
+import json
 from flask import Flask, request
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
@@ -42,6 +43,12 @@ def targetTestEndPoint():
    response = t.get_target_data()
 
    return response
+
+@app.route('/getItems')
+def test():
+    with open('./data.json', 'r') as j:     
+        out = json.loads(j.read())
+    return out 
 
 if __name__ == '__main__':
     app.run(debug=True)
