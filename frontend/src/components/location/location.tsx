@@ -37,11 +37,12 @@ export const GoogleAutoCompleteLocation = ({
           placeholder="Enter a zipcode"
           apiKey={mapsAPIKey}
           onPlaceSelected={place => {
-            const zipcodeFromAddress =
-              place.formatted_address.match(/\b\d{5}\b/g);
+            const zipcodeFromAddress = place.formatted_address.match(
+              /[a-zA-Z]{2} \b\d{5}\b/g,
+            );
             if (zipcodeFromAddress) {
               setLocation(place.formatted_address);
-              setZipcode(place.formatted_address.match(/\b\d{5}\b/g));
+              setZipcode(zipcodeFromAddress[0].slice(3));
               setDisplayLocationPopup(!displayLocationPopUp);
               setDisplayErrorMessage(false);
             } else {

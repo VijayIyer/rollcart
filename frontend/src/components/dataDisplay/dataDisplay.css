@@ -26,6 +26,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.itemThumbnail {
+  position: relative;
+  left: 30%;
+}
+
+.itemThumbnailLeft {
+  position: relative;
+  left: 20%;
+}
+
 .addItemButton {
   padding: 5px;
   color: white;
@@ -68,6 +79,23 @@
   background-color: #0071dc;
   color: white;
   /* padding: 5px 20px 5px 10px; */
+}
+
+.noItemsToDisplay {
+  position: absolute;
+  top: 50%;
+  left: 40%;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 600;
+}
+.noItemsImageIcon {
+  position: relative;
+  left: 40%;
+}
+
+.pointerCursor {
+  cursor: pointer;
 }
 
 .flex-wrap {

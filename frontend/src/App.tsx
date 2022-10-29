@@ -1,9 +1,9 @@
-import axios from 'axios';
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
-import { DisplayItems } from './dataDisplay/dataDisplay';
-import Header from './header/Header';
-import { LoadingBar } from './loadingBar/loadingBar';
-import { GoogleAutoCompleteLocation } from './location/location';
+import { DisplayItems } from './components/dataDisplay/dataDisplay';
+import Header from './components/header/Header';
+import { LoadingBar } from './components/loadingBar/loadingBar';
+import TopLoadingBar from './components/loadingBar/topLoadingBar';
+import { GoogleAutoCompleteLocation } from './components/location/location';
 
 function App() {
   const [zipcode, setZipcode] = useState('47408');
@@ -13,6 +13,7 @@ function App() {
   const [displayLocationPopUp, setDisplayLocationPopup] = useState(false);
   const [location, setLocation] = useState('120 Kingston Drive South, 47408');
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     setSearchTerm(query);
@@ -20,6 +21,7 @@ function App() {
 
   return (
     <div className="App">
+      <TopLoadingBar progress={progress} setProgress={setProgress} />
       <Header
         zipcode={zipcode}
         query={query}
@@ -27,7 +29,8 @@ function App() {
         setItemsToDisplay={setItemsToDisplay}
         location={location}
         setDisplayLocationPopup={setDisplayLocationPopup}
-        setIsLoading={setIsLoading}></Header>
+        setIsLoading={setIsLoading}
+        setProgress={setProgress}></Header>
       {isLoading ? (
         <LoadingBar />
       ) : (
@@ -35,9 +38,6 @@ function App() {
           searchTerm={searchTerm}
           items={itemsToDisplay.result}></DisplayItems>
       )}
-      {/* <DisplayItems
-        searchTerm={searchTerm}
-        items={itemsToDisplay.result}></DisplayItems> */}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}
         setDisplayLocationPopup={setDisplayLocationPopup}
