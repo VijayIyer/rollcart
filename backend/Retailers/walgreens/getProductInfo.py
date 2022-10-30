@@ -2,7 +2,6 @@ from backend.Retailers.util import read_ini
 from backend.getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
-import validators
 import pgeocode
 import requests
 from geopy.distance import geodesic
