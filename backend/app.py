@@ -1,14 +1,16 @@
-from time import time
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, make_response
+from distutils.log import debug
+import json
+from flask import Flask, request, make_response
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
+from backend.Retailers.target.getProductInfo import Target
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from sqlalchemy import select
-import json
 
 USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
@@ -21,6 +23,8 @@ ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 
 app = Flask(__name__)
+CORS(app)
+
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 engine = create_engine(db_connect_string, connect_args=ssl_args)
@@ -136,8 +140,8 @@ def addItem():
         return make_response('Item added successfully', 200)
     except Exception as e:
         print(e)
-        return make_response('Error adding Item', 400)        
-## 
+        return make_response('Error adding Item', 400)
+
 
 @app.route('/intro')
 def index():
@@ -164,24 +168,22 @@ def walgreensTestEndPoint():
     w = Walgreens()
     return w.getProductsInNearByStore(args["q"], args["zipcode"])
 
-# only for testing
-# @app.route('/addUser', methods=['POST'])
-# def add_user():
-#     body = request.get_json()
-#     user = (body.user.userName, body.user.password, body.user.firstName, body.user.lastName)
-#     createUser(conn, user)
-#     return make_response('User added', 200)
 
+## TODO: Update target class to take in Retailer format like the others.
+@app.route('/targetTest')
+def targetTestEndPoint():
+   args = request.args
 
-# # only for testing
-# @app.route('/addList/<str:userName>', methods=['POST'])
-# def add_list(userName:str):
-#     body = request.get_json()
-#     userId = getUserId(userName)
-#     list = (body.list.name, userId)
-#     create_list(conn, list)
-#     return make_response('User added', 200)
+   t = Target(args['zip'], args['upc'])
+   response = t.get_target_data()
 
+   return response
+
+@app.route('/getItems')
+def test():
+    with open('./data.json', 'r') as j:     
+        out = json.loads(j.read())
+    return out 
 
 if __name__ == '__main__':
     # u = User.query.all()
