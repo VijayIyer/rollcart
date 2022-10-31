@@ -1,36 +1,31 @@
-from distutils.log import debug
 from time import time
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, make_response
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
-# from sqlite_test import create_connection, create_list, createUser, getUserId
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
-import sqlalchemy
 from sqlalchemy.orm import sessionmaker
+from flask.json import jsonify
+from sqlalchemy import select
+import json
+
+USER_NAME = "rollcartadmin"
+PASSWORD = "!grocerybudget1"
+SERVER_NAME = "rollcartdb.mysql.database.azure.com"
+PORT_NUMBER = "3306"
+DATABASE_NAME = "rollcarttest"
+
+db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcarttest"
+ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcarttest'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
-
-#################################################
-# Database Setup
-#################################################
-sqlUrl = sqlalchemy.engine.url.URL(
-    drivername="mysql+pymysql",
-    username='rollcartadmin',
-    password='!grocerybudget1',
-    host='rollcartdb.mysql.database.azure.com',
-    port=3306,
-    database='rollcarttest',
-    query={"ssl_ca": "DigiCertGlobalRootCA.crt.pem"},
-)
-engine = create_engine(sqlUrl)
-# engine = create_engine("mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcarttest"
-Session = sessionmaker(bind=engine)
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+engine = create_engine(db_connect_string, connect_args=ssl_args)
+SessionMaker = sessionmaker(bind=engine)
+Session = SessionMaker()
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -42,25 +37,107 @@ ItemDetails = Base.classes.itemdetails
 ListDetails = Base.classes.listdetails
 Price = Base.classes.price
 
-# with app.app_context:
-#     db.Model.metadata.reflect(bind=db.engine,schema='rollcarttest')
 
-# with app.app_context():
-#     db.reflect()
-
-
-# class ListDetails(db.Model):
-#     '''deal with an existing table'''
-#     __tablename__ = 'listdetails'
-#     # id = db.Column('')
-
-
+## db endpoints
 @app.route('/getUsers', methods=['GET'])
 def getUsers():
-    results = Session.query(User).all()
-    for r in results:
-        print(r.user_name)
-    return 'Users queried'
+    '''
+    gets all users in the database
+    '''
+    try:
+        results = Session.query(User).all()
+        users = []
+        for r in results:
+            user = dict()
+            user['name'] = r.user_name
+            user['firstname'] = r.firstname
+            user['lastname'] = r.lastname
+            users.append(user)
+        return make_response(users, 200)
+    except Exception as e:
+        print(e)
+        return make_response('Error getting Users', 400)
+
+    
+@app.route('/getUserLists/<int:userId>', methods=['GET'])
+def getUserLists(userId:int):
+    '''
+    Gets List Names created by user with userid provided in the request
+    '''
+    try:
+        listIds = Session.query(List.list_id).filter(List.user_id == userId)
+        lists = Session.query(ListDetails).join(List, ListDetails.item_id == List.list_id) \
+        .filter(ListDetails.item_id.in_(listIds))
+        listResults  = []
+        for list in lists:
+            listDict = dict()
+            listDict['listname'] = list.listname
+            listResults.append(listDict)
+        return make_response(listResults, 200)
+    except Exception as e:
+        print(e)
+        return make_response(e, 400)
+
+
+@app.route('/getListItems/<int:listId>', methods=['GET'])
+def getListItems(listId:int):
+    '''
+    Gets items in the list with listid provided in the query
+    '''
+    try:
+        itemIds = Session.query(List.item_id).filter(List.list_id == listId)
+        items = Session.query(ItemDetails).filter(ItemDetails.item_id.in_(itemIds))
+        itemResults =[]
+        for item in items:
+            itemDict = dict()
+            itemDict['itemName'] = item.itemname
+            itemResults.append(itemDict)
+        return make_response(itemResults, 200)
+    except Exception as e:
+        print(e)
+        return make_response('Error retrieving items in list', 401)
+
+
+@app.route('/addUser', methods=['POST'])
+def addUser():
+    user = request.get_json()
+    newUser = User(user_id = user['user_id']
+            , user_name = user['user_name']
+            ,password = user['password']
+            ,firstname = user['firstname']
+            ,lastname = user['lastname'])
+    try:
+        Session.add(newUser)
+        Session.commit()
+        return make_response('User added successfully', 200)
+    except Exception as e:
+        print(e)
+        return make_response('Error adding user', 400)
+
+
+@app.route('/addItem', methods=['POST'])
+def addItem():
+    '''
+    adds item to a list for a particular user
+    '''
+    body = request.get_json()
+    # user_id = body['user_id']
+    # list_id = body['list_id']
+    item_id = body['item_id']
+    newItem = ItemDetails(item_id = item_id
+            ,itemname = body['itemname']
+            )
+    # newList = List(user_id = user_id
+    #         ,list_id = list_id
+    #         ,item_id = item_id)
+    try:
+        Session.add(newItem)
+        Session.commit()
+        return make_response('Item added successfully', 200)
+    except Exception as e:
+        print(e)
+        return make_response('Error adding Item', 400)        
+## 
 
 @app.route('/intro')
 def index():
