@@ -100,7 +100,7 @@ class Kroger(Retailer):
       
       response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       
-      
+      print(response.text)
       if response.status_code == 200:
         responsevalue = response.json()
         print("\n LocationId of the store: ",responsevalue['data'][0]['locationId'])

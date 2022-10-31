@@ -1,0 +1,94 @@
+.googleAutoCompleteLocationDiv {
+  /* width: 200px; */
+  /* padding: 10px;
+  margin: 50px; */
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background-color: rgb(255, 255, 255);
+  position: fixed;
+  width: 600px;
+  height: 500px;
+  border-radius: 10px;
+  top: 20%;
+  left: 20%;
+  box-shadow: rgb(0 0 0 / 16%) 0px 0px 16px;
+}
+
+.locationPopupTitle {
+  display: grid;
+  justify-items: center;
+  grid-template-columns: 1fr 8fr 1fr;
+  height: 44px;
+  margin-top: 10px;
+}
+
+.closePopup {
+  /* position: relative; */
+  height: 30px;
+  width: 30px;
+  border: none;
+  padding: 0px;
+  margin: 2px 0px 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.closePopupButton {
+  cursor: pointer;
+}
+.closePopup:hover {
+  background-color: rgb(246, 247, 248);
+}
+
+.addressTitle {
+  font-size: 18px;
+  line-height: 26px;
+  margin: 0;
+  font-weight: 600;
+  place-self: center;
+}
+
+.autocompleteReactDiv {
+  text-align: center;
+}
+
+.pac-container:after {
+  /* Disclaimer: not needed to show 'powered by Google' if also a Google Map is shown */
+
+  background-image: none !important;
+  height: 0px;
+}
+
+/* .pac-container {
+  width: 500px;
+  background-color: pink;  
+  border: solid 1px black;
+} */
+
+.pac-item {
+  margin: 10px;
+}
+
+@media (min-width: 768px) {
+  .googleAutoCompleteLocationDiv {
+    height: 420px;
+    /* width: 520px; */
+    width: 570px;
+  }
+}
+@media (min-width: 768px) {
+  .googleAutoCompleteLocationDiv {
+    max-height: calc(100vh - 96px);
+  }
+}
+
+.errorMessage {
+  margin: 25px;
+  padding: 5px;
+  border-radius: 3px 3px 3px 3px;
+  color: #ef4646;
+  width: 220px;
+  font-weight: 200;
+}
