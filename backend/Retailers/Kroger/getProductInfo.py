@@ -14,8 +14,8 @@ from backend.getProductPrices import Retailer
 params = read_ini()
 BASE_URL = params["KROGER"]["base_url"]
 payload='grant_type=client_credentials&scope=product.compact'
-PRODUCTSEARCHURL = params["KROGER"]['storesearch_url']
-STORESEARCHURL = params["KROGER"]['productsearch_url']
+STORESEARCHURL = params["KROGER"]['storesearch_url']
+PRODUCTSEARCHURL = params["KROGER"]['productsearch_url']
 
 
 header = {
@@ -59,7 +59,6 @@ class Kroger(Retailer):
 
       if response.status_code == 200 :
         responsevalue = response.json()
-        print(responsevalue)
 
         itemsretrived = []
 
@@ -100,7 +99,6 @@ class Kroger(Retailer):
       
       response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       
-      print(response.text)
       if response.status_code == 200:
         responsevalue = response.json()
         print("\n LocationId of the store: ",responsevalue['data'][0]['locationId'])
