@@ -16,11 +16,11 @@ BASE_URL = params["KROGER"]["base_url"]
 payload='grant_type=client_credentials&scope=product.compact'
 STORESEARCHURL = params["KROGER"]['storesearch_url']
 PRODUCTSEARCHURL = params["KROGER"]['productsearch_url']
-
+AUTH_TOKEN = params['KROGER']['auth_token']
 
 header = {
   'Content-Type': 'application/x-www-form-urlencoded',
-  'Authorization': 'Basic Z3JvY2VyeS1idWRnZXQtYXBwLWI3MGFkYmQ1ZjZkYWJjMDM5YTJiZTcxYmY3ZTkwNzY1NTQxOTkyNDA2OTM5OTE1MTUxOTpQc0k3SUdPNlMzdml5Y05USWl6c3FISTVsd1hxN1lOVXhxNFVKdHdl'
+  'Authorization': AUTH_TOKEN
   }
 
 
