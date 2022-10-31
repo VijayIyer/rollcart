@@ -186,8 +186,5 @@ def test():
     return out 
 
 if __name__ == '__main__':
-    # u = User.query.all()
-    # print(u)
     app.run(debug=True)
-    # with app.app_context:
-    #     db.reflect()
+
