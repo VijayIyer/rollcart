@@ -6,4 +6,7 @@ mypy==0.982
 requests==2.27.1
 typing_extensions==4.4.0
 flask-cors==3.0.10
-
+Flask-SQLAlchemy==3.0.2
+PyMySQL==1.0.2
+SQLAlchemy==1.4.42
+mysql-connector-python==8.0.31
