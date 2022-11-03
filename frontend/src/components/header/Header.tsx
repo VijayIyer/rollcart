@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Header.css';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface appProps {
   zipcode: string;
@@ -112,9 +113,13 @@ function AddList() {
 }
 
 function Login() {
+  const navigate = useNavigate();
+
   return (
     <div className="login">
-      <button className="loginButton actionButton">
+      <button
+        className="loginButton actionButton"
+        onClick={() => navigate('/login')}>
         <i className="fa-solid fa-user"></i>
         <span> Login</span>
       </button>
