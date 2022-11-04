@@ -97,24 +97,3 @@
 .pointerCursor {
   cursor: pointer;
 }
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-.flex {
-  display: flex;
-}
-
-.w-100 {
-  width: 100%;
-}
-.flex-shrink-0 {
-  flex-shrink: 0;
-}
-.flex-grow-0 {
-  flex-grow: 0;
-}
-
-.w-25 {
-  width: 25%;
-}

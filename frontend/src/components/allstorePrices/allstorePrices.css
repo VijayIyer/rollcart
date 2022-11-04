@@ -1,4 +1,4 @@
-.storePricesContainer {
+.allstorePricesContainer {
   margin: 20px;
   border: 1px solid black;
   border-radius: 5px;
@@ -18,14 +18,14 @@
   display: block;
 }
 
-.storePricesDiv {
+.allstorePricesDiv {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-column-gap: 20px;
   grid-row-gap: 20px;
 }
 
-/* .storePricesBox {
+/* .allstorePricesBox {
   text-align: center;
   padding: 5px;
   margin: 5px;
@@ -34,7 +34,7 @@
   cursor: pointer;
 } */
 
-.storePricesBox {
+.allstorePricesBox {
   /* height: 100%; */
   box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
   border-radius: 12px;
@@ -47,26 +47,26 @@
   padding: 20px;
 }
 
-.storeImage {
+.allstoreImage {
   box-shadow: 0 0 0 1px #e8e9eb;
   border-radius: 50%;
 }
-.storeDetails {
+.allstoreDetails {
   /* grid-area: center; */
   /* display: block; */
   margin-left: 20px;
 }
-.storeName {
+.allstoreName {
   color: #343538;
   font-size: 15px;
   line-height: 22px;
   font-weight: 600;
 }
 
-.storePricesBox:hover {
+.allstorePricesBox:hover {
   box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
-.storePrice {
+.allstorePrice {
   font-weight: 500;
 }
