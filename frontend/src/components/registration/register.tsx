@@ -1,18 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { LogoHeader } from '../header/Header';
 import './register.css';
 
-const LogoHeader = () => {
-  const navigate = useNavigate();
-  return (
-    <div className="header">
-      <button className="logo1 allUnsetButton" onClick={() => navigate('/')}>
-        <i className="fa-solid fa-cart-shopping fa-2xl"></i>
-        <div className="logoTitle">roll</div>
-        <div className="logoTitle">cart</div>
-      </button>
-    </div>
-  );
-};
 const Register = () => {
   const navigate = useNavigate();
   return (

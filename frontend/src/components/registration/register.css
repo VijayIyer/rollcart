@@ -1,13 +1,3 @@
-.logo1 {
-  cursor: pointer;
-  position: absolute;
-  align-items: center;
-  justify-content: center;
-  top: 5%;
-  left: 45%;
-  font-size: 30px;
-}
-
 .registerContainer {
   padding: 16px;
   width: 400px;

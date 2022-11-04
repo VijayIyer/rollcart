@@ -4,8 +4,12 @@ body {
   box-sizing: border-box;
 }
 
+:root {
+  --bgcolor: #5837d0;
+}
+
 .header {
-  background-color: #5837d0;
+  background-color: var(--bgcolor);
   display: flex;
   flex-direction: row;
   height: 100px;
@@ -87,12 +91,53 @@ a {
 }
 
 .actionButton {
-  width: 100px;
-  height: 50px;
+  width: 99px;
+  height: 47px;
   background-color: white;
   color: black;
   border: none;
   border-radius: 10px;
   font-size: 16px;
   margin: 10px;
+  cursor: pointer;
+}
+
+.fa-stack[data-count]:after {
+  position: absolute;
+  right: 0%;
+  top: 0%;
+  content: attr(data-count);
+  font-size: 40%;
+  padding: 0.6em;
+  border-radius: 999px;
+  line-height: 0.75em;
+  background: var(--bgcolor);
+  text-align: center;
+  min-width: 2em;
+  font-weight: bold;
+  color: white;
+  border-style: solid;
+}
+.fa-circle {
+  color: white;
+}
+
+.storePricesButton {
+  width: 50;
+  height: 50;
+  cursor: pointer;
+}
+
+#storePrices {
+  font-size: 1.5em;
+}
+
+.logo1 {
+  cursor: pointer;
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  top: 5%;
+  left: 45%;
+  font-size: 30px;
 }

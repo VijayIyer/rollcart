@@ -34,6 +34,7 @@ function Header(props: appProps) {
         location={props.location}></Address>
       <AddList></AddList>
       <Login></Login>
+      <StorePrices></StorePrices>
     </div>
   );
 }
@@ -105,7 +106,7 @@ function AddList() {
   return (
     <div className="addList">
       <button className="addListButton actionButton">
-        <i className="fa-solid fa-cart-plus"></i>
+        <i className="fa-regular fa-rectangle-list"></i>
         <span> Add List</span>
       </button>
     </div>
@@ -126,5 +127,39 @@ function Login() {
     </div>
   );
 }
+
+function StorePrices() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="storePrices">
+      <span
+        className="storePricesButton"
+        onClick={() => navigate('/storePrices')}>
+        <span
+          id="storePrices"
+          className="fa-stack fa-2x has-badge"
+          data-count="3">
+          <i className="fa fa-circle fa-stack-2x"></i>
+          <i className="fa fa-shopping-cart fa-stack-1x"></i>
+        </span>
+      </span>
+    </div>
+  );
+}
+
+// Simple header for other pages. It only has the logo in the center.
+export const LogoHeader = () => {
+  const navigate = useNavigate();
+  return (
+    <div className="header">
+      <button className="logo1 allUnsetButton" onClick={() => navigate('/')}>
+        <i className="fa-solid fa-cart-shopping fa-2xl"></i>
+        <div className="logoTitle">roll</div>
+        <div className="logoTitle">cart</div>
+      </button>
+    </div>
+  );
+};
 
 export default Header;
