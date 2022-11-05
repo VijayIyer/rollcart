@@ -16,9 +16,9 @@ USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
 SERVER_NAME = "rollcartdb.mysql.database.azure.com"
 PORT_NUMBER = "3306"
-DATABASE_NAME = "rollcarttest"
+DATABASE_NAME = "rollcartv2"
 
-db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcarttest"
+db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcartv2"
 ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 
@@ -37,42 +37,63 @@ Base = automap_base()
 Base.prepare(engine, reflect=True)
 User = Base.classes.user
 List = Base.classes.list
-ItemDetails = Base.classes.itemdetails
-ListDetails = Base.classes.listdetails
+UserList = Base.classes.userlist
+Item = Base.classes.item
+UserListItem = Base.classes.userlistitem
+Store = Base.classes.store
 Price = Base.classes.price
+
 
 
 ## db endpoints
 @app.route('/login', methods=['POST'])
 def login():
-    return make_response('login unsuccessful', 403)
+    try:
+        return make_response({'message':'login successful', 'token':1}, 200)
+    except Exception as e:
+        print(e)
+        return make_response({'message':'Invalid Credentials'}, 403)
 
 
 @app.route('/register', methods=['POST'])
 def register():
-    user = request.get_json()
-    existingUserCount = Session.query(User).filter(User.user_name == user['user_name']).count()
-    if existingUserCount > 0:
-        return make_response({'message':'User already exists'}, 409)
-    newUser = User(user_id = user['user_id']
-            , user_name = user['user_name']
+    
+    try:
+        with Session() as session:
+            user = request.get_json()
+            existingUserCount = Session.query(User).filter(User.user_name == user['username'] and User.password == user['password']).count()
+            
+            if existingUserCount > 0:
+                return make_response({'message':'User already exists'}, 409)
+
+            newUser = User(user_name = user['username']
             ,password = user['password']
             ,firstname = user['firstname']
             ,lastname = user['lastname'])
-    try:
-        Session.add(newUser)
-        Session.commit()
-        response = {'message':'Registration Successful'}
+            Session.add(newUser)
+            Session.commit()
+            response = {'message':'Registration Successful'}
         return make_response(response, 201)
     except Exception as e:
         print(e)
         return make_response('Error adding user', 400)
-    return make_response('User already exists', 409)
 
 
 @app.route('/logout', methods=['POST'])
 def logout():
-    return make_response({'message':'User logged out successfully'}, 200)
+    try:
+        with Session() as session:
+            body = request.get_json()
+            if session.query(User).filter(User.user_name == body['userName']).count() == 0:
+                return make_response({'message':'No such User {} exists in database'.format(body['userName'])})
+            else:
+                loggedInUser = session.query(User).filter(User.user_name == body['userName']).one()
+                ## turn below into logged out update statement
+                print(loggedInUser)
+                return make_response({'message':'User logged out successfully'}, 200)
+    except Exception as e:
+        print(e)
+        return make_response({'message':'error logging out user'}, 400)
 
 
 #  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
@@ -99,13 +120,25 @@ def getUsers():
 @app.route('/user/<int:userId>/addList', methods=['POST'])
 def addList(userId:int):
     try:
+        returnListId = None
         with Session() as session:
             body = request.get_json()
-            listId = session.query(ListDetails).count() + 1
-            newList = ListDetails(item_id = listId, listname = body['listname'])
+            # checking user exists
+            if session.query(User).filter(User.user_id == userId).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
+            # adding to list table
+            newList = List(list_name = body['listname'])
             session.add(newList)
+            # flush() will allow to return id of inserted row
+            session.flush()
+            # adding to user list relationship table
+            newUserList = UserList(user_id = userId, list_id = newList.list_id)
+            session.add(newUserList)
+            # flush() will allow to return id of inserted row
+            session.flush()
+            returnListId = newUserList.list_id
             session.commit()
-        return make_response({'listId': listId}, 201)
+        return make_response({'listId': returnListId}, 201)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to add list'}, 500)
@@ -118,13 +151,17 @@ def getLists(userId:int):
     '''
     try:
         with Session() as session:
-            listIds = session.query(List.list_id).filter(List.user_id == userId)
-            lists = session.query(ListDetails).join(List, ListDetails.item_id == List.list_id) \
-            .filter(ListDetails.item_id.in_(listIds))
+            # checking user exists
+            if session.query(User).filter(User.user_id == userId).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
+            listIds = session.query(UserList.list_id).filter(UserList.user_id == userId)
+            lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
+            .filter(List.list_id.in_(listIds))
             listResults  = []
             for list in lists:
                 listDict = dict()
-                listDict['listname'] = list.listname
+                listDict['listname'] = list.list_id
+                listDict['listname'] = list.list_name
                 listResults.append(listDict)
         return make_response(listResults, 200)
     except Exception as e:
@@ -139,12 +176,14 @@ def getListItems(listId:int):
     '''
     try:
         with Session() as session:
-            itemIds = session.query(List.item_id).filter(List.list_id == listId)
-            items = session.query(ItemDetails).filter(ItemDetails.item_id.in_(itemIds))
+            userListId = session.query(UserList).filter(UserList.list_id == listId).one()
+            itemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
+            items = session.query(Item).filter(Item.item_id.in_(itemIds))
             itemResults =[]
             for item in items:
                 itemDict = dict()
-                itemDict['itemName'] = item.itemname
+                itemDict['itemId'] = item.item_id
+                itemDict['itemName'] = item.item_name
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
@@ -157,7 +196,7 @@ def getItems():
     try:
         with Session() as session:
             q = request.args['q']
-            items = session.query(ItemDetails).filter(ItemDetails.itemname.contains(q))
+            items = session.query(Item).filter(Item.itemname.contains(q))
             results = []
             for item in items:
                 itemDict = dict()
@@ -177,19 +216,23 @@ def addItem(userId:int, listId:int):
     '''
     try:
         returnItemId = None
-        returnListId = None
         with Session() as session:
+            # checking user exists
+            if session.query(User).filter(User.user_id == userId).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
+            if session.query(List).filter(List.list_id == listId).count() == 0:
+                return make_response({'message':'List with id {} not found'.format(listId)}, 400)
             body = request.get_json()
-            item_id = body['item_id']
-            newItem = ItemDetails(item_id = item_id
-                ,itemname = body['itemname'])
+            newItem = Item(item_name = body['itemName'])
             session.add(newItem)
-            newListItem = List(user_id = userId, list_id = listId, item_id = newItem.item_id)
-            session.add(newListItem)
+            session.flush()
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).first() # create issue, weird code
+            newUserListItem = UserListItem(user_list_id = userListId[0], item_id = newItem.item_id, quantity = body['quantity'])
+            session.add(newUserListItem)
+            session.flush()
+            returnItemId = newItem.item_id
             session.commit()
-            returnItemId = newListItem.item_id
-            returnListId = newListItem.list_id
-        return make_response('Item {} added successfully to {}'.format(returnItemId, returnListId), 200)
+        return make_response('Item {} added successfully to {}'.format(returnItemId, listId), 200)
     except Exception as e:
         print(e)
         return make_response('Error adding Item', 400)
@@ -199,14 +242,17 @@ def addItem(userId:int, listId:int):
 def getPrices(userId:int, listId:int):
     try:
         with Session() as session:
-            itemIds = session.query(List.item_id).filter(List.user_id == userId and List.list_id == listId)
-            prices = session.query(Price).filter(Price.item_id.in_(itemIds))
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).one()
+            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
+            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
+            .filter(Price.item_id.in_(itemIds))
             results = []
-            for price in prices:
-                storePrice = dict()
-                storePrice['storeId'] = price.store_id
-                storePrice['totalPrice'] = price.rec_product_price
-                results.append(storePrice)
+            for price in itemStorePrices:
+                ItemStorePrice = dict()
+                ItemStorePrice['itemName'] = price.item_name
+                ItemStorePrice['storeId'] = price.store_id
+                ItemStorePrice['totalPrice'] = price.rec_product_price
+                results.append(ItemStorePrice)
             return make_response(results, 200)
     except Exception as e:
         print(e)
@@ -217,33 +263,35 @@ def getPrices(userId:int, listId:int):
 def getStorePrices(userId:int, listId:int, storeId:int):
     try:
         with Session() as session:
-            itemIds = session.query(List).filter(List.user_id == userId and List.list_id == listId)
-            prices = session.query(Price).filter(Price.item_id.in_(itemIds) and Price.store_id == storeId)
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).one()
+            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
+            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
+            .filter(Price.item_id.in_(itemIds) and Price.store_id == storeId)
             results = []
-            for price in prices:
-                storePrice = dict()
-                storePrice['storeId'] = price.store_id
-                storePrice['totalPrice'] = price.rec_product_price
-                results.append(storePrice)
-            return make_response(results, 200)
+            for price in itemStorePrices:
+                ItemStorePrice = dict()
+                ItemStorePrice['itemName'] = price.item_name
+                ItemStorePrice['storeId'] = price.store_id
+                ItemStorePrice['totalPrice'] = price.rec_product_price
+                results.append(ItemStorePrice)
+        return make_response(results, 200)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to get prices'}, 400)
-    return make_response([], 200)
 
 
-@app.route('/<int:userId>/<int:listId>/<int:itemId>/removeItem', methods=['DELETE'])
+@app.route('/<int:userId>/<int:listId>/<int:itemId>', methods=['DELETE'])
 def removeItem(userId, listId, itemId):
     try:
         with Session() as session:
-            item = session.query(ItemDetails).filter(ItemDetails.item_id == itemId).one()
-            listItems = session.query(List).filter(List.user_id == userId and List.list_id == listId and List.item_id == itemId).all()
-            for listItem in listItems:
-                session.delete(listItem)
+            item = session.query(Item).filter(Item.item_id == itemId).one()
+            # listItems = session.query(List).filter(List.user_id == userId and List.list_id == listId and List.item_id == itemId).all()
+            # for listItem in listItems:
+            #     session.delete(listItem)
             session.delete(item)
             session.commit()
-        return make_response({'message': 'Item {} deleted successfully from {}'\
-            .format(item.item_id, listId)}, 200)
+        return make_response({'message': 'Item {} deleted successfully'\
+            .format(item.item_id)}, 200)
     except Exception as e:
         print(e)
         return make_response('unable to remove item from list', 500)
