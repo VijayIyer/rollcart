@@ -1,5 +1,7 @@
 from distutils.log import debug
 import json
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
 from flask import Flask, request, make_response
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
@@ -10,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
-from sqlalchemy import select
+from functools import wraps
 
 USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
@@ -23,6 +25,7 @@ ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'SECRET'
 CORS(app)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
@@ -44,15 +47,44 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+        else:
+            return jsonify({'message':'Token is missing'}, 401)
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            with Session() as session:
+                currentUser = session.query(User).filter(User.user_id == data['user_id']).first()
+        except:
+            return jsonify({'message':'Token is invalid'}), 401
+        
+        return f(currentUser, *args, **kwargs)
+    return decorated
+
 
 ## db endpoints
 @app.route('/login', methods=['POST'])
 def login():
     try:
-        return make_response({'message':'login successful', 'token':1}, 200)
+        with Session() as session:
+            auth = request.authorization
+            if auth is None or auth.username is None or auth.password is None:
+                return make_response({'message':'No authorization headers'}, 403)
+            
+            existingUser = session.query(User).filter(User.user_name == auth.username and User.password == auth.password).first()
+            if not existingUser:
+                return make_response({'message':'No such user in database'}, 409)
+            if check_password_hash(existingUser.password, auth.password):
+                token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
+                return jsonify({'message':'login successful', 'token':token}), 201
+            else:
+                return make_response({'message':'Invalid Credentials'}, 403)
     except Exception as e:
         print(e)
-        return make_response({'message':'Invalid Credentials'}, 403)
+        return make_response({'message':'Unknown Error, check logs'}, 400)
 
 
 @app.route('/register', methods=['POST'])
@@ -61,17 +93,17 @@ def register():
     try:
         with Session() as session:
             user = request.get_json()
-            existingUserCount = Session.query(User).filter(User.user_name == user['username'] and User.password == user['password']).count()
-            
+            //hashedPassword = generate_password_hash(user['password'], method='sha256')
+            existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
 
             newUser = User(user_name = user['username']
-            ,password = user['password']
-            ,firstname = user['firstname']
-            ,lastname = user['lastname'])
-            Session.add(newUser)
-            Session.commit()
+                        , password = user['password']
+                        , first_name = user['firstname']
+                        , last_name = user['lastname'])
+            session.add(newUser)
+            session.commit()
             response = {'message':'Registration Successful'}
         return make_response(response, 201)
     except Exception as e:
@@ -85,7 +117,7 @@ def logout():
         with Session() as session:
             body = request.get_json()
             if session.query(User).filter(User.user_name == body['userName']).count() == 0:
-                return make_response({'message':'No such User {} exists in database'.format(body['userName'])})
+                return make_response({'message':'No such User {} found in database'.format(body['userName'])})
             else:
                 loggedInUser = session.query(User).filter(User.user_name == body['userName']).one()
                 ## turn below into logged out update statement
