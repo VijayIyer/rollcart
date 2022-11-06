@@ -77,7 +77,7 @@ def login():
             existingUser = session.query(User).filter(User.user_name == auth.username and User.password == auth.password).first()
             if not existingUser:
                 return make_response({'message':'No such user in database'}, 409)
-            if check_password_hash(existingUser.password, auth.password):
+            if existingUser.password == auth.password:
                 token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
                 return jsonify({'message':'login successful', 'token':token}), 201
             else:
@@ -93,7 +93,7 @@ def register():
     try:
         with Session() as session:
             user = request.get_json()
-            //hashedPassword = generate_password_hash(user['password'], method='sha256')
+            # hashedPassword = generate_password_hash(user['password'], method='sha256')
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
