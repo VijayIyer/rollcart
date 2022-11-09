@@ -53,7 +53,7 @@ def token_required(f):
         if 'x-access-token' in request.headers:
             token = request.headers['x-access-token']
         else:
-            return jsonify({'message':'Token is missing'}, 401)
+            return jsonify({'message':'Token is missing'}), 401
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
             with Session() as session:
@@ -150,6 +150,7 @@ def getUsers():
 
 
 @app.route('/user/<int:userId>/addList', methods=['POST'])
+@token_required
 def addList(userId:int):
     try:
         returnListId = None
@@ -177,6 +178,7 @@ def addList(userId:int):
 
 
 @app.route('/user/<int:userId>/getLists', methods=['GET'])
+@token_required
 def getLists(userId:int):
     '''
     Gets List Names created by user with userid provided in the request
@@ -202,6 +204,7 @@ def getLists(userId:int):
 
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
+@token_required
 def getListItems(listId:int):
     '''
     Gets items in the list with listid provided in the query
@@ -224,6 +227,7 @@ def getListItems(listId:int):
 
 
 @app.route('/getItems', methods=['GET'])
+@token_required
 def getItems():
     try:
         with Session() as session:
@@ -242,6 +246,7 @@ def getItems():
 
 
 @app.route('/<int:userId>/<int:listId>/addItem', methods=['POST'])
+@token_required
 def addItem(userId:int, listId:int):
     '''
     adds item to a list for a particular user
@@ -271,6 +276,7 @@ def addItem(userId:int, listId:int):
 
 
 @app.route('/<int:userId>/<int:listId>/getPrices', methods=['GET'])
+@token_required
 def getPrices(userId:int, listId:int):
     try:
         with Session() as session:
@@ -292,6 +298,7 @@ def getPrices(userId:int, listId:int):
 
 
 @app.route('/<int:userId>/<int:listId>/<int:storeId>/getPrices', methods=['GET'])
+@token_required
 def getStorePrices(userId:int, listId:int, storeId:int):
     try:
         with Session() as session:
@@ -313,6 +320,7 @@ def getStorePrices(userId:int, listId:int, storeId:int):
 
 
 @app.route('/<int:userId>/<int:listId>/<int:itemId>', methods=['DELETE'])
+@token_required
 def removeItem(userId, listId, itemId):
     try:
         with Session() as session:
