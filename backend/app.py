@@ -388,6 +388,36 @@ def test():
         out = json.loads(j.read())
     return out 
 
+@app.route('/getStoreItems')
+def test2():
+    with open('./data.json', 'r') as j:     
+        out = json.loads(j.read())
+    return out 
+
+
+@app.route("/getPrices/<int:listId>")
+def test1(listId: int):
+    print("List id requested is",listId)
+    return [
+        {
+            "store":"walmart",
+            "price": 20
+        },
+        {
+            "store": "target",
+            "price": 21.21
+        },
+        {
+            "store": "walgreens",
+            "price": 11.21
+        },
+        {
+            "store": "kroger",
+            "price": 11.21
+        },
+        
+    ]
+
 if __name__ == '__main__':
     app.run(debug=True)
 
