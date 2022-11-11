@@ -75,13 +75,13 @@ class Kroger(Retailer):
 
 
           image = plist['images'][0]['sizes'][0]['url']
-
+          purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
           item ={
                       "itemId": upc,
                       "itemName": desc,
                       "itemPrice": minprice,
                       "itemThumbnail":image,
-                      "productPageUrl":"product_page_url"
+                      "productPageUrl":purl
 
           }
 
@@ -101,9 +101,6 @@ class Kroger(Retailer):
       
       if response.status_code == 200:
         responsevalue = response.json()
-        print("\n LocationId of the store: ",responsevalue['data'][0]['locationId'])
-        print("Address: " ,responsevalue['data'][0]['address'])
-
         return responsevalue['data'][0]['locationId']
 
       return  -1
