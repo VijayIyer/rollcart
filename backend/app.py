@@ -1,9 +1,9 @@
-from crypt import methods
 from distutils.log import debug
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from flask import Flask, request, make_response
+from backend.Retailers.util import getUniqueItems
 from backend.Retailers.Kroger.getProductInfo import Kroger
 from backend.Retailers.walmart.getProductinfo import Walmart
 from backend.Retailers.walgreens.getProductInfo import *
@@ -48,6 +48,9 @@ UserListItem = Base.classes.userlistitem
 Store = Base.classes.store
 Price = Base.classes.price
 
+
+# retailers
+retailers = [Target(), Walgreens(), Kroger(), Walmart()]
 
 def token_required(f):
     @wraps(f)
@@ -344,6 +347,19 @@ def index():
     return {"welcomeMessage": "Hi there! We're currently getting things setup and should be ready for use in a few weeks!"}
 
 # Only for testing
+
+
+@app.route('/getProducts', methods=['GET'])
+def getProducts():
+    try:
+        args = request.args
+        items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
+        print(len(items))
+        items = getUniqueItems(items, k='itemName')
+        print(len(items))
+        return make_response(items, 200)
+    except:
+        return make_response({'message:Error retrieving products'}, 400)
 
 
 @app.route('/walmartTest', methods=['GET'])
