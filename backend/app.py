@@ -393,20 +393,21 @@ def krogerTestEndpoint():
     return k.getProductsInNearByStore(args["q"], args["zipcode"])
 
     
-
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
 @app.route('/getItems')
 def test():
     with open('./data.json', 'r') as j:     
         out = json.loads(j.read())
     return out 
 
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
 @app.route('/getStoreItems')
 def test2():
     with open('./data.json', 'r') as j:     
         out = json.loads(j.read())
     return out 
 
-
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
 @app.route("/getPrices/<int:listId>")
 def test1(listId: int):
     print("List id requested is",listId)
