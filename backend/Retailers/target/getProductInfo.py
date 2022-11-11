@@ -59,23 +59,6 @@ class Target:
         }
 
         response = requests.request("GET", url, headers=headers, params=querystring)
-
-        # out = GoogleSearch(self.params).get_dictionary()
-        # response = []
-        # for item in out["organic_results"]:
-        #     response.append(
-        #         {
-        #             "itemId": item["us_item_id"],
-        #             "itemName": item["title"],
-        #             "itemPrice": item["primary_offer"]["offer_price"],
-        #             "itemThumbnail":item["thumbnail"],
-        #             "productPageUrl":item["product_page_url"]
-        #         }
-        #     )
-        # print("Store id using is",self.params["store_id"])
-        # return response
-        test_response = response.json()
-        print(test_response)
         
         product_matches = response.json()["data"]["search"]["products"]
 
