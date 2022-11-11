@@ -21,7 +21,7 @@ class requestResult:
 
 
 def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requestResult:
-    print(WALGREENS_STORESEARCH_ENDPOINT)
+    # print(WALGREENS_STORESEARCH_ENDPOINT)
 
     data = {
         "lat": lat,
@@ -33,7 +33,7 @@ def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requ
         "sameday": "true",
     }
     resp = requests.post(url=WALGREENS_STORESEARCH_ENDPOINT, data=data)
-    print(resp.status_code)
+    # print(resp.status_code)
     if resp.status_code == 200:
         return requestResult(True, resp.json())
     else:
@@ -74,15 +74,14 @@ class Walgreens(Retailer):
         userData = self.dist.query_postal_code(userLocation)
         userLat = userData.latitude
         userLon = userData.longitude
-        print(userLat, userLon)
         storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
         if storeLocatorResults.success:
-            print("store locator result successful")
+            # print("store locator result successful")
             for store in storeLocatorResults.data["results"]:
                 storeLon = store["longitude"]
                 storeLat = store["latitude"]
                 storeId = store["store"]["storeNumber"]
-                print(storeLon, storeLat, storeId)
+                # print(storeLon, storeLat, storeId)
                 curDistance = geodesic(
                     (storeLat, storeLon), (userLat, userLon)).miles
                 if curDistance < nearestDistance:
@@ -122,19 +121,17 @@ class Walgreens(Retailer):
                 # replace with logger
                 # print(len(data["products"]))
                 # print(data["products"])
-                print(IN_STOCK)
                 for product in resp.data["products"]:
                     productInfo = product["productInfo"]
                     if "storeInv" in productInfo.keys():
-                        print(productInfo["storeInv"] == IN_STOCK)
                         if productInfo["storeInv"] == IN_STOCK:
                             # this is where desired fields can be added
                             products.append(Item(itemName=productInfo["productName"],
                                                  itemId=productInfo["upc"],
                                                  itemPrice=self.getCorrectPrice(
                                 productInfo["priceInfo"]["regularPrice"]),
-                                itemThumbnail=BASE_URL +
-                                productInfo["productURL"],
+                                itemThumbnail="http:" +
+                                productInfo["imageUrl"],
                                 productPageUrl=BASE_URL+productInfo["productURL"])
                             )
                 return products
