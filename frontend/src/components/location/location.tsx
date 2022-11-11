@@ -41,7 +41,7 @@ export const GoogleAutoCompleteLocation = ({
               /[a-zA-Z]{2} \b\d{5}\b/g,
             );
             if (zipcodeFromAddress) {
-              setLocation(place.formatted_address);
+              setLocation(place.formatted_address.slice(0, -5));
               setZipcode(zipcodeFromAddress[0].slice(3));
               setDisplayLocationPopup(!displayLocationPopUp);
               setDisplayErrorMessage(false);

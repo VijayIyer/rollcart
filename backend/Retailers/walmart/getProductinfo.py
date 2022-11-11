@@ -44,6 +44,9 @@ class Walmart(Retailer):
         self.params["store_id"] = self.getNearestStoreId(zipcode)
         out = GoogleSearch(self.params).get_dictionary()
         response = []
+        if "organic_results" not in out:
+            print(out)
+            return response
         for item in out["organic_results"]:
             response.append(
                 {

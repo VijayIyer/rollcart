@@ -1,0 +1,40 @@
+.cartCount {
+  margin: 20px;
+}
+.itemPriceStoreContainer {
+  margin: 20px;
+  /* border: 1px solid red; */
+  padding: 20px;
+  width: 70%;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* .row-item {
+  display: inline-block;
+} */
+.itemPriceBox {
+  flex-direction: row;
+  position: relative;
+  height: 120px;
+}
+
+.itemNameStore {
+  margin-left: 20px;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+.itemPriceBox {
+  margin-bottom: 8px;
+  margin-top: 8px;
+  border-color: #f1f1f2;
+  border-top-style: solid;
+  border-top-width: 1px;
+  padding-top: 20px;
+}
+.tableItem {
+  align-items: center;
+  justify-content: center;
+}
