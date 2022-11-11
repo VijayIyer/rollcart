@@ -10,9 +10,7 @@ import SignIn from './components/login/login';
 import AllStorePrices from './components/allstorePrices/allstorePrices';
 import StorePrice from './components/storePrices/storePrice';
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement,
-);
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
 const router = createBrowserRouter([
   {
