@@ -363,13 +363,11 @@ def walgreensTestEndPoint():
     w = Walgreens()
     return w.getProductsInNearByStore(args["q"], args["zipcode"])
 
-
-## TODO: Update target class to take in Retailer format like the others.
 @app.route('/targetTest')
 def targetTestEndPoint():
    args = request.args
-
    t = Target()
+   
    return t.getProductsInNearByStore(args["q"], args["zipcode"])
 
 @app.route('/krogerTest',methods=['GET'])
