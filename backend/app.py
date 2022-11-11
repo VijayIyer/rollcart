@@ -369,8 +369,8 @@ def walgreensTestEndPoint():
 def targetTestEndPoint():
    args = request.args
 
-   t = Target(args['q'], args['zip'])
-   return t.get_price_by_product_name()
+   t = Target()
+   return t.getProductsInNearByStore(args["q"], args["zipcode"])
 
 @app.route('/krogerTest',methods=['GET'])
 def krogerTestEndpoint():
