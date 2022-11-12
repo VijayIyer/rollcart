@@ -1,12 +1,13 @@
 from backend.Retailers.walmart.getProductinfo import Walmart
 
-
+TEST_ZIPCODE = "47401"
+TEST_PRODUCT = "milk"
 def test_walmart_store_endpoint():
     
     walmart = Walmart()
     
 
-    response = walmart.getNearestStoreId(47401)
+    response = walmart.getNearestStoreId(TEST_ZIPCODE)
 
     assert int(response) !=  -1
 
@@ -17,7 +18,7 @@ def test_walmart_product_endpoint():
 
     walmart = Walmart()
 
-    response = walmart.getProductsInNearByStore("milk",47401)
+    response = walmart.getProductsInNearByStore(TEST_PRODUCT,TEST_ZIPCODE)
     
     assert type(response) == list
     assert len(response) != 0
