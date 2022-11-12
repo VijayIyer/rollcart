@@ -1,11 +1,7 @@
 
-from ast import List
 
 import json
-import os,base64
-from PIL import Image
 import requests
-import urllib.request
 from backend.Retailers.util import read_ini
 
 from backend.getProductPrices import Retailer
@@ -46,7 +42,7 @@ class Kroger(Retailer):
 
       storeId = self.getNearestStoreId(zipcode)
       if storeId == -1:
-        return {"Message ":" Kroger store unavailable at given zipcode"}
+        return []
     
       apiurl =   PRODUCTSEARCHURL
       params = {

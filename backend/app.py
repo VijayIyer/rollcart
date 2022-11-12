@@ -25,10 +25,10 @@ DATABASE_NAME = "rollcartv2"
 db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcartv2"
 ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'SECRET'
 CORS(app)
+    
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -131,6 +131,7 @@ def logout():
 
 
 #  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
+
 def getUsers():
     '''
     gets all users in the database
