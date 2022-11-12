@@ -199,7 +199,7 @@ def getLists(user):
             listResults  = []
             for list in lists:
                 listDict = dict()
-                listDict['listname'] = list.list_id
+                listDict['listId'] = list.list_id
                 listDict['listname'] = list.list_name
                 listResults.append(listDict)
         return make_response(listResults, 200)
