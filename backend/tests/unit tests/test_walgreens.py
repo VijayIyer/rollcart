@@ -2,7 +2,10 @@
 from Retailers.walgreens.getProductInfo import Walgreens
 
 
+
 TEST_ZIPCODE = "46143"
+
+
 TEST_PRODUCT = "milk"
 
 def test_walgreens_store_endpoint():
