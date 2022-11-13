@@ -2,6 +2,7 @@ from distutils.log import debug
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+from backend.Retailers import config
 from flask import Flask, request, make_response
 from backend.Retailers.util import getUniqueItems
 from backend.Retailers.Kroger.getProductInfo import Kroger
@@ -17,19 +18,21 @@ from flask.json import jsonify
 from functools import wraps
 import random
 
-USER_NAME = "rollcartadmin"
-PASSWORD = "!grocerybudget1"
-SERVER_NAME = "rollcartdb.mysql.database.azure.com"
-PORT_NUMBER = "3306"
-DATABASE_NAME = "rollcartv2"
-
-db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcartv2"
-ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
-
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'SECRET'
+
+# Using a production configuration
+#app.config.from_object('config.ProdConfig')
+
+# Using a development configuration
+app.config.from_object(config.DevConfig)
+
 CORS(app)
+
+DB_PARAMS = app.config['DATABASE_PARAMS']
+
+db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
+
+ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -447,5 +450,5 @@ def test1(listId: int):
     ]
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 

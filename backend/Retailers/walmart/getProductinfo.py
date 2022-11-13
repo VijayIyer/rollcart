@@ -1,4 +1,4 @@
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 from backend.getProductPrices import Retailer
 import pandas as pd
 from serpapi import GoogleSearch
@@ -6,10 +6,10 @@ import pgeocode
 from geopy.distance import geodesic
 
 
-params = read_ini()
-api_key = params["WALMART"]["api_key"]
-device = params["WALMART"]["device"]
-engine = params["WALMART"]["engine"]
+params = config.Config.WALMART_PARAMS
+api_key = params["API_KEY"]
+device = params["DEVICE"]
+engine = params["ENGINE"]
 
 
 class Walmart(Retailer):
