@@ -68,6 +68,9 @@ class Walgreens(Retailer):
     def __init__(self):
         self.dist = pgeocode.Nominatim("us")
 
+    def __str__(self):
+        return 'Walgreens'
+        
     def getNearestStoreId(self, userLocation):
         nearestStoreId = -1
         nearestDistance = float("inf")
