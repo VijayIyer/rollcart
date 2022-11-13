@@ -1,0 +1,93 @@
+.userlist-container {
+  position: absolute;
+  left: 35%;
+  top: 20%;
+  background-color: white;
+  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  padding: 30px 50px;
+  z-index: 200;
+  border-radius: 20px;
+}
+
+.userlistPopupTitle {
+  display: grid;
+  justify-items: center;
+  grid-template-columns: 1fr 8fr 1fr;
+  height: 44px;
+  margin-bottom: 30px;
+}
+
+.userlistItem {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* gap: 170px; */
+  justify-content: space-between;
+  padding: 20px;
+  /* border: 1px solid red; */
+  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  margin: 5px;
+}
+
+.red {
+  color: red;
+}
+
+.userlistItem:hover {
+  background-color: rgb(227, 227, 227);
+}
+
+.addUserList {
+  margin-top: 30px;
+  align-items: center;
+  justify-content: center;
+}
+
+.inputAddUserList {
+  height: 50px;
+  font-size: large;
+  margin-right: 30px;
+  margin-left: 10px;
+  padding-left: 10px;
+  border: none;
+  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  border-radius: 2px;
+  width: 220px;
+}
+
+.buttonAddUserList {
+  height: 50px;
+  background-color: #54b435;
+  color: white;
+  padding: 20px;
+  border: none;
+  align-items: center;
+  border-radius: 20px;
+}
+
+.button-3 {
+  background-color: #2ea44f;
+  border: 1px solid rgba(27, 31, 35, 0.15);
+  border-radius: 6px;
+  box-shadow: rgba(27, 31, 35, 0.1) 0 1px 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  padding: 6px 16px;
+  position: relative;
+}
+
+.button-3:hover {
+  background-color: #2c974b;
+}
+
+.listSelected {
+  border: 1px dashed var(--bgcolor);
+}
+
+.selectedListName {
+  font-weight: 1000;
+}

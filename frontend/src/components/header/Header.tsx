@@ -3,6 +3,7 @@ import './Header.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { clearBrowserLocalStorage } from '../../utils/util';
+import { ManageLists } from '../manageLists/manageLists';
 
 interface appProps {
   zipcode: string;
@@ -99,6 +100,9 @@ function AddList() {
 
 function Login() {
   const [showLoggedInUserOptions, setShowLoggedInUserOptions] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [userLists, setUserLists] = useState([]);
+  const [selectedList, setSelectedList] = useState();
   const navigate = useNavigate();
 
   const handleOnchange = (e: any) => {
@@ -123,7 +127,14 @@ function Login() {
           </button>
           {showLoggedInUserOptions && (
             <div className="userOptions">
-              <p className="userOptionRow">View lists</p>
+              <p
+                className="userOptionRow"
+                onClick={() => {
+                  setShowListModal(!showListModal);
+                  setShowLoggedInUserOptions(false);
+                }}>
+                View lists
+              </p>
               <hr />
               <p
                 className="userOptionRow"
@@ -135,6 +146,16 @@ function Login() {
                 Logout
               </p>
             </div>
+          )}
+          {showListModal && (
+            <ManageLists
+              showListModal={showListModal}
+              setShowListModal={setShowListModal}
+              userLists={userLists}
+              setUserLists={setUserLists}
+              selectedList={selectedList}
+              setSelectedList={setSelectedList}
+            />
           )}
         </div>
       ) : (

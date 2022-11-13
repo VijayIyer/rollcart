@@ -22,7 +22,7 @@ function App() {
   useEffect(() => {
     if (localStorage.getItem('token')) {
       setToken(localStorage.getItem('token') as string);
-      setAuthToken(token);
+      setAuthToken(localStorage.getItem('token'));
     }
   }, []);
 
