@@ -105,7 +105,6 @@ function Login({ selectedList, setSelectedList }: any) {
   const [showLoggedInUserOptions, setShowLoggedInUserOptions] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [userLists, setUserLists] = useState([]);
-
   const navigate = useNavigate();
 
   const handleOnchange = (e: any) => {
