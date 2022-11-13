@@ -60,10 +60,10 @@ def token_required(f):
         else:
             return jsonify({'message':'Token is missing'}), 401
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'])
+            data = jwt.decode(token, app.config['SECRET_KEY'],algorithms='HS256')
             with Session() as session:
                 currentUser = session.query(User).filter(User.user_id == data['user_id']).first()
-        except:
+        except:            
             return jsonify({'message':'Token is invalid'}), 401
         
         return f(currentUser, *args, **kwargs)
