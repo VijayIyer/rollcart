@@ -15,7 +15,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
-import decimal
+import random
 
 USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
@@ -292,22 +292,26 @@ def getPrices(user, listId:int):
             print(userListId)
             userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
             print(userListItems)
-            prices = dict()
-            for userListItem in userListItems:
-                item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
-                filter(UserListItem.item_id == userListItem.item_id).scalar()
-                prices[item.item_name] = dict()
-                
-                for retailer in retailers:
+            results = []
+            for retailer in retailers:
+                storeId = retailer.getNearestStoreId(zip)
+                prices = dict()
+                prices['store_name'] = str(retailer)
+                prices['total_price'] = 0
+                prices['storeId'] = storeId
+                prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
+                prices['allItemsAvailable'] = True
+                for userListItem in userListItems:
+                    item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                    filter(UserListItem.item_id == userListItem.item_id).scalar()
                     searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
                     if len(searchResults) > 0:
-                        prices[item.item_name][str(retailer)] = dict()
                         minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-                        prices[item.item_name][str(retailer)]['ItemPrice'] = minPriceItem['itemPrice']*userListItem.quantity
-                        prices[item.item_name][str(retailer)]['ItemThumbnail'] =   minPriceItem['itemThumbnail']
-                        prices[item.item_name][str(retailer)]['ItemUrl'] =   minPriceItem['productPageUrl']
-                                    
-            return make_response(prices, 200)
+                        prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                    else:
+                        prices['allItemsAvailable'] = False
+                results.append(prices)                               
+            return make_response(results, 200)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to get prices'}, 400)
