@@ -3,7 +3,6 @@ from ast import List
 
 import json
 import os,base64
-from PIL import Image
 import requests
 import urllib.request
 from backend.Retailers.util import read_ini
@@ -39,7 +38,9 @@ class Kroger(Retailer):
         'Authorization': "Bearer %s" %(actoken)
         }
 
-
+        
+  def __str__(self):
+        return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str):
 

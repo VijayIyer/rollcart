@@ -15,6 +15,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
+import decimal
 
 USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
@@ -283,20 +284,27 @@ def addItem(user, listId:int):
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
 def getPrices(user, listId:int):
+    
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
-            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
-            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.item_id.in_(itemIds))
-            results = []
-            for price in itemStorePrices:
-                ItemStorePrice = dict()
-                ItemStorePrice['itemName'] = price.item_name
-                ItemStorePrice['storeId'] = price.store_id
-                ItemStorePrice['totalPrice'] = price.rec_product_price
-                results.append(ItemStorePrice)
-            return make_response(results, 200)
+            zip = request.args.get('zipcode')
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
+            print(userListId)
+            userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
+            print(userListItems)
+            prices = dict()
+            for userListItem in userListItems:
+                item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                filter(UserListItem.item_id == userListItem.item_id).scalar()
+                prices[item.item_name] = dict()
+                
+                for retailer in retailers:
+                    searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
+                    if len(searchResults) > 0:
+                        price = min(searchResults, key=lambda x:x['itemPrice'])['itemPrice']
+                        prices[item.item_name][str(retailer)] = price*userListItem.quantity   # choose cheapest instead of 0 index here
+                
+            return make_response(prices, 200)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to get prices'}, 400)
