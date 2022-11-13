@@ -15,8 +15,14 @@ const StorePrice = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await axios.get('http://127.0.0.1:5000/getStoreItems');
-      setCartList(data);
+      if (process.env.NODE_ENV !== 'production'){
+        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_LOCAL + 'getStoreItems');
+        setCartList(data);
+      }
+      else{
+        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_PROD + 'getStoreItems');
+        setCartList(data);
+      }
     }
     fetchData();
   }, []);
