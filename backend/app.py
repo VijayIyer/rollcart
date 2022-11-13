@@ -15,6 +15,7 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
+import random
 
 USER_NAME = "rollcartadmin"
 PASSWORD = "!grocerybudget1"
@@ -283,19 +284,33 @@ def addItem(user, listId:int):
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
 def getPrices(user, listId:int):
+    
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
-            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
-            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.item_id.in_(itemIds))
+            zip = request.args.get('zipcode')
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
+            print(userListId)
+            userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
+            print(userListItems)
             results = []
-            for price in itemStorePrices:
-                ItemStorePrice = dict()
-                ItemStorePrice['itemName'] = price.item_name
-                ItemStorePrice['storeId'] = price.store_id
-                ItemStorePrice['totalPrice'] = price.rec_product_price
-                results.append(ItemStorePrice)
+            for retailer in retailers:
+                storeId = retailer.getNearestStoreId(zip)
+                prices = dict()
+                prices['store_name'] = str(retailer)
+                prices['total_price'] = 0
+                prices['storeId'] = storeId
+                prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
+                prices['allItemsAvailable'] = True
+                for userListItem in userListItems:
+                    item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                    filter(UserListItem.item_id == userListItem.item_id).scalar()
+                    searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
+                    if len(searchResults) > 0:
+                        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                        prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                    else:
+                        prices['allItemsAvailable'] = False
+                results.append(prices)                               
             return make_response(results, 200)
     except Exception as e:
         print(e)

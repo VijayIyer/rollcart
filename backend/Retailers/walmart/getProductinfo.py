@@ -13,6 +13,9 @@ engine = params["WALMART"]["engine"]
 
 
 class Walmart(Retailer):
+    def __str__(self):
+        return 'Walmart'
+
     def __init__(self):
         self.walmartStoreData = pd.read_csv("Retailers/walmart/walmartStoreData.csv")
         self.dist = pgeocode.Nominatim("us")
