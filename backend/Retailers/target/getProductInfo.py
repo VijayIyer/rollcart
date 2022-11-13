@@ -1,12 +1,12 @@
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 from backend.getProductPrices import Retailer
 import requests
 import decimal
 
-params = read_ini()
-api_key = params["TARGET"]["rapidapi_key"]
-api_host = params["TARGET"]["rapidapi_host"]
-api_productName_host = params["TARGET"]["rapidapi_productName_host"]
+params = config.Config.TARGET_PARAMS
+api_key = params["RAPIDAPI_KEY"]
+api_host = params["RAPIDAPI_HOST"]
+api_productName_host = params["RAPIDAPI_PRODUCTNAME_HOST"]
 
 class Target(Retailer):
 

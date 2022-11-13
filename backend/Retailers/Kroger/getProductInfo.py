@@ -5,17 +5,17 @@ import json
 import os,base64
 import requests
 import urllib.request
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 
 from backend.getProductPrices import Retailer
 
 
-params = read_ini()
-BASE_URL = params["KROGER"]["base_url"]
+params = config.Config.KROGER_PARAMS
+BASE_URL = params["BASE_URL"]
 payload='grant_type=client_credentials&scope=product.compact'
-STORESEARCHURL = params["KROGER"]['storesearch_url']
-PRODUCTSEARCHURL = params["KROGER"]['productsearch_url']
-AUTH_TOKEN = params['KROGER']['auth_token']
+STORESEARCHURL = params['STORESEARCH_URL']
+PRODUCTSEARCHURL = params['PRODUCTSEARCH_URL']
+AUTH_TOKEN = params['AUTH_TOKEN']
 
 header = {
   'Content-Type': 'application/x-www-form-urlencoded',
