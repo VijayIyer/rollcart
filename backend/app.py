@@ -301,9 +301,12 @@ def getPrices(user, listId:int):
                 for retailer in retailers:
                     searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
                     if len(searchResults) > 0:
-                        price = min(searchResults, key=lambda x:x['itemPrice'])['itemPrice']
-                        prices[item.item_name][str(retailer)] = price*userListItem.quantity   # choose cheapest instead of 0 index here
-                
+                        prices[item.item_name][str(retailer)] = dict()
+                        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                        prices[item.item_name][str(retailer)]['ItemPrice'] = minPriceItem['itemPrice']*userListItem.quantity
+                        prices[item.item_name][str(retailer)]['ItemThumbnail'] =   minPriceItem['itemThumbnail']
+                        prices[item.item_name][str(retailer)]['ItemUrl'] =   minPriceItem['productPageUrl']
+                                    
             return make_response(prices, 200)
     except Exception as e:
         print(e)
