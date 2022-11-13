@@ -19,8 +19,19 @@ const AllStorePrices = () => {
 
   useEffect(() => {
     async function fetchData() {
+<<<<<<< HEAD
       const { data } = await axios.get('/getPrices/3');
       setPrices(data);
+=======
+      if (process.env.NODE_ENV !== 'production'){
+        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_LOCAL + 'getPrices/3');
+        setPrices(data);
+      }
+      else{
+        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_PROD + 'getPrices/3');
+        setPrices(data);
+      }
+>>>>>>> 95da4b15 (Updated config for frontend)
     }
     fetchData();
   }, []);

@@ -18,6 +18,12 @@ const SignIn = () => {
     //console.log('what am i?', process.env.REACT_APP_SERVER_BASE_URL);
     e.preventDefault();
     const authData = { username: email, password };
+    let baseUri;
+    if (process.env.NODE_ENV !== 'production') {
+      baseUri = process.env.REACT_APP_SERVER_BASE_URL_LOCAL;
+    } else {
+      baseUri = process.env.REACT_APP_SERVER_BASE_URL_PROD;
+    }
     axios
       .post('/login', {}, { auth: authData })
       .then(async response => {
