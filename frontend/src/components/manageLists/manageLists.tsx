@@ -1,17 +1,16 @@
 import axios from 'axios';
-import { JSXElementConstructor, Key, ReactElement, ReactFragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { failedToast, successfulToast } from '../../utils/util';
 import './manageLists.css';
 
-export const ManageLists = ({ showListModal, setShowListModal, userLists, setUserLists, selectedList, setSelectedList }: any) => {
+export const ManageLists = ({ showListModal, setShowListModal, userLists, setUserLists }: any) => {
   const [newListName, setNewListName] = useState('');
 
   const getCurrentLists = () => {
-    console.log('I am here');
     axios.get('getLists').then(response => {
       const { data } = response;
-      setUserLists(data.map((item: { [x: string]: any }) => item['listname']));
+      setUserLists(data);
     });
   };
 
@@ -19,14 +18,7 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
     getCurrentLists();
   }, []);
 
-  //   const availableLists = ['List name-1', 'List name-2', 'List name-3', 'List name-4'];
-
-  const handleUserListItemClicked = (e: any) => {
-    setSelectedList(e.target.textContent);
-  };
-
   const handleAddNewUserListClicked = () => {
-    console.log('new item is', newListName);
     axios
       .post('/addList', {
         listname: newListName,
@@ -51,19 +43,12 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
         </div>
         <h1 className="addressTitle">Manage Lists</h1>
       </div>
-      {userLists.length === 0 ? (
-        <p>Please create a new list item!</p>
-      ) : selectedList ? (
-        <p>{selectedList} is selected!</p>
-      ) : (
-        <p>Please select an item</p>
-      )}
 
       <div className="userlistdetails">
         {userLists.map((item: any) => {
           return (
-            <div key={item} className={`userlistItem ${selectedList === item && 'listSelected'}`} onClick={handleUserListItemClicked}>
-              <div className="userlistName">{item}</div>
+            <div key={item.listId} className={`userlistItem`}>
+              <div className="userlistName">{item.listname}</div>
               <div className="closePopup1 red">
                 <i className="fa-solid fa-xmark fa-xl closePopupButton"></i>
               </div>

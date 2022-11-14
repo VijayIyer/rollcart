@@ -17,8 +17,8 @@ function App() {
   const [location, setLocation] = useState('120 Kingston Drive South, 47408');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [userLists, setUserLists] = useState([]);
   const [token, setToken] = useState('');
-  const [selectedList, setSelectedList] = useState();
 
   useEffect(() => {
     if (localStorage.getItem('token')) {
@@ -43,9 +43,13 @@ function App() {
         setDisplayLocationPopup={setDisplayLocationPopup}
         setIsLoading={setIsLoading}
         setProgress={setProgress}
-        selectedList={selectedList}
-        setSelectedList={setSelectedList}></Header>
-      {isLoading ? <LoadingBar /> : <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result}></DisplayItems>}
+        userLists={userLists}
+        setUserLists={setUserLists}></Header>
+      {isLoading ? (
+        <LoadingBar />
+      ) : (
+        <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result} userLists={userLists} setUserLists={setUserLists}></DisplayItems>
+      )}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}
         setDisplayLocationPopup={setDisplayLocationPopup}

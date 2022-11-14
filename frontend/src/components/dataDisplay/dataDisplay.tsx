@@ -2,7 +2,6 @@ import axios from 'axios';
 import React, { useEffect } from 'react';
 import { useState } from 'react';
 import { AddToList } from '../addToList/addToList';
-// import { ManageLists } from '../manageLists/manageLists';
 import './dataDisplay.css';
 
 export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, productPageUrl, userLists, setUserLists }: any) => {
@@ -61,9 +60,7 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
   );
 };
 
-export const DisplayItems = ({ searchTerm, items }: any) => {
-  const [userLists, setUserLists] = useState([]);
-
+export const DisplayItems = ({ searchTerm, items, userLists, setUserLists }: any) => {
   const getCurrentLists = () => {
     axios.get('getLists').then(response => {
       const { data } = response;

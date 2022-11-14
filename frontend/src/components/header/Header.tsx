@@ -3,8 +3,7 @@ import './Header.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { clearBrowserLocalStorage } from '../../utils/util';
-import { ManageLists } from '../manageLists copy/manageLists';
-// import { ManageLists } from '../manageLists/manageLists';
+import { ManageLists } from '../manageLists/manageLists';
 
 interface appProps {
   zipcode: string;
@@ -15,11 +14,14 @@ interface appProps {
   setDisplayLocationPopup: any;
   setIsLoading: any;
   setProgress: any;
-  selectedList: any;
-  setSelectedList: any;
+  userLists: any;
+  setUserLists: any;
 }
 
 function Header(props: appProps) {
+  // const [userLists, setUserLists] = useState([]);
+  // const [userLists, setUserLists] = useState([]);
+
   return (
     <div className="header">
       <a href="#/" className="logo">
@@ -35,8 +37,7 @@ function Header(props: appProps) {
         setIsLoading={props.setIsLoading}
         setProgress={props.setProgress}></SearchBar>
       <Address setDisplayLocationPopup={props.setDisplayLocationPopup} location={props.location}></Address>
-      <AddList selectedList={props.selectedList}></AddList>
-      <Login selectedList={props.selectedList} setSelectedList={props.setSelectedList}></Login>
+      <Login userLists={props.userLists} setUserLists={props.setUserLists}></Login>
       <StorePrices></StorePrices>
     </div>
   );
@@ -90,29 +91,12 @@ function Address({ setDisplayLocationPopup, location }: any) {
   );
 }
 
-function AddList({ selectedList }: any) {
-  return (
-    <div className="addList">
-      <button className="addListButton actionButton">
-        <i className="fa-regular fa-rectangle-list"></i>
-        <span> Lists</span>
-      </button>
-    </div>
-  );
-}
-
-function Login({ selectedList, setSelectedList }: any) {
+function Login({ userLists, setUserLists }: any) {
   const [showLoggedInUserOptions, setShowLoggedInUserOptions] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
-  const [userLists, setUserLists] = useState([]);
   const navigate = useNavigate();
 
-  const handleOnchange = (e: any) => {
-    console.log(e);
-  };
-
   const userName = localStorage.getItem('userId')?.split('@')[0];
-
   const handleLoggedInUserClicked = () => {
     setShowLoggedInUserOptions(!showLoggedInUserOptions);
   };
@@ -135,7 +119,7 @@ function Login({ selectedList, setSelectedList }: any) {
                   setShowListModal(!showListModal);
                   setShowLoggedInUserOptions(false);
                 }}>
-                View lists
+                Manage lists
               </p>
               <hr />
               <p
@@ -150,14 +134,7 @@ function Login({ selectedList, setSelectedList }: any) {
             </div>
           )}
           {showListModal && (
-            <ManageLists
-              showListModal={showListModal}
-              setShowListModal={setShowListModal}
-              userLists={userLists}
-              setUserLists={setUserLists}
-              selectedList={selectedList}
-              setSelectedList={setSelectedList}
-            />
+            <ManageLists showListModal={showListModal} setShowListModal={setShowListModal} userLists={userLists} setUserLists={setUserLists} />
           )}
         </div>
       ) : (
