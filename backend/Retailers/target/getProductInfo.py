@@ -1,5 +1,5 @@
-from backend.Retailers import config
-from backend.getProductPrices import Retailer
+from Retailers import config
+from getProductPrices import Retailer
 import requests
 import decimal
 

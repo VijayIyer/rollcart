@@ -1,5 +1,5 @@
-from backend.Retailers import config
-from backend.getProductPrices import Item, Retailer
+from Retailers import config
+from getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
 import pgeocode

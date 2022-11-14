@@ -2,13 +2,13 @@ from distutils.log import debug
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
-from backend.Retailers import config
+from Retailers import config
 from flask import Flask, request, make_response
-from backend.Retailers.util import getUniqueItems
-from backend.Retailers.Kroger.getProductInfo import Kroger
-from backend.Retailers.walmart.getProductinfo import Walmart
-from backend.Retailers.walgreens.getProductInfo import *
-from backend.Retailers.target.getProductInfo import Target
+from Retailers.util import getUniqueItems
+from Retailers.Kroger.getProductInfo import Kroger
+from Retailers.walmart.getProductinfo import Walmart
+from Retailers.walgreens.getProductInfo import *
+from Retailers.target.getProductInfo import Target
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
@@ -29,7 +29,7 @@ app.config.from_object(config.DevConfig)
 CORS(app)
 
 DB_PARAMS = app.config['DATABASE_PARAMS']
-
+print(DB_PARAMS)
 db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
 
 ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}

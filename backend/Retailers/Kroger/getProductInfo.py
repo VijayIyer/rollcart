@@ -5,9 +5,9 @@ import json
 import os,base64
 import requests
 import urllib.request
-from backend.Retailers import config
+from Retailers import config
 
-from backend.getProductPrices import Retailer
+from getProductPrices import Retailer
 
 
 params = config.Config.KROGER_PARAMS
