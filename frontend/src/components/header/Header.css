@@ -12,7 +12,9 @@ body {
   display: flex;
   flex-direction: row;
   height: 100px;
+  /* align-items: ; */
   align-items: center;
+  gap: 30px;
   padding-left: 30px;
 }
 

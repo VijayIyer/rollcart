@@ -29,15 +29,9 @@ const StorePrice = () => {
         {cartList.map((item: storeItem) => (
           <div className="itemPriceBox flex" key={item.itemName.slice(100)}>
             <img src={item.itemThumbnail} alt="" width={100} height={100} />
-            <div className="itemNameStore tableItem flex w-60">
-              {item.itemName}
-            </div>
-            <div className="itemQuantityStore tableItem flex ml-auto">
-              {item.quantity}
-            </div>
-            <div className="itemPriceStore tableItem flex ml-auto">
-              {item.itemPrice}$
-            </div>
+            <div className="itemNameStore tableItem flex w-60">{item.itemName}</div>
+            <div className="itemQuantityStore tableItem flex ml-auto">{item.quantity}</div>
+            <div className="itemPriceStore tableItem flex ml-auto">{item.itemPrice}$</div>
           </div>
         ))}
       </div>
