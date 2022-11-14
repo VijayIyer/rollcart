@@ -1,4 +1,4 @@
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 from backend.getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
@@ -6,12 +6,12 @@ import pgeocode
 import requests
 from geopy.distance import geodesic
 
-params = read_ini()
-BASE_URL = params["WALGREENS"]["base_url"]
-WALGREENS_STORESEARCH_ENDPOINT = params["WALGREENS"]["storesearch_url"]
-WALGREENS_PRODUCTSEARCH_ENDPOINT = params["WALGREENS"]["productsearch_url"]
-DEFAULT_STORE_RADIUS = params["WALGREENS"]["default_radius"]
-IN_STOCK = params["WALGREENS"]["in_stock_string"]
+params = config.Config.WALGREENS_PARAMS
+BASE_URL = params["BASE_URL"]
+WALGREENS_STORESEARCH_ENDPOINT = params["STORESEARCH_URL"]
+WALGREENS_PRODUCTSEARCH_ENDPOINT = params["PRODUCTSEARCH_URL"]
+DEFAULT_STORE_RADIUS = params["DEFAULT_RADIUS"]
+IN_STOCK = params["IN_STOCK_STRING"]
 
 
 class requestResult:

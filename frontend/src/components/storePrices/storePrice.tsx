@@ -15,7 +15,7 @@ const StorePrice = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await axios.get('http://127.0.0.1:5000/getStoreItems');
+      const { data } = await axios.get('/getStoreItems');
       setCartList(data);
     }
     fetchData();

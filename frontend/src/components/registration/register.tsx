@@ -21,7 +21,7 @@ const Register = () => {
     }
     const body = { firstname: fullName, lastname: ' ', password, username: email };
     axios
-      .post(process.env.REACT_APP_SERVER_BASE_URL + '/register', body)
+      .post('/register', body)
       .then(async response => {
         setProgress(100);
         if (response.status === 201) {

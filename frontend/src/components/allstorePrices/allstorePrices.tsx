@@ -19,7 +19,7 @@ const AllStorePrices = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await axios.get('http://127.0.0.1:5000/getPrices/3');
+      const { data } = await axios.get('/getPrices/3');
       setPrices(data);
     }
     fetchData();

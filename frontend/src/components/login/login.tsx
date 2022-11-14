@@ -15,11 +15,11 @@ const SignIn = () => {
   const [progress, setProgress] = useState(0);
 
   const handleSubmit = (e: any) => {
-    console.log('what am i?', process.env.REACT_APP_SERVER_BASE_URL);
+    //console.log('what am i?', process.env.REACT_APP_SERVER_BASE_URL);
     e.preventDefault();
     const authData = { username: email, password };
     axios
-      .post(process.env.REACT_APP_SERVER_BASE_URL + '/login', {}, { auth: authData })
+      .post('/login', {}, { auth: authData })
       .then(async response => {
         setProgress(100);
         if (response.status === 201) {
