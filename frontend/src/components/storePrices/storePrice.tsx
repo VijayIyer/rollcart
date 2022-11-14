@@ -15,14 +15,8 @@ const StorePrice = () => {
 
   useEffect(() => {
     async function fetchData() {
-      if (process.env.NODE_ENV !== 'production'){
-        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_LOCAL + 'getStoreItems');
-        setCartList(data);
-      }
-      else{
-        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_PROD + 'getStoreItems');
-        setCartList(data);
-      }
+      const { data } = await axios.get('/getStoreItems');
+      setCartList(data);
     }
     fetchData();
   }, []);
