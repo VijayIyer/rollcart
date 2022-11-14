@@ -29,9 +29,7 @@ app.config.from_object(config.DevConfig)
 CORS(app)
 
 DB_PARAMS = app.config['DATABASE_PARAMS']
-print(DB_PARAMS)
 db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
-
 ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
