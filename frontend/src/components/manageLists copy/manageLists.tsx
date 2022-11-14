@@ -8,7 +8,7 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
   const [newListName, setNewListName] = useState('');
 
   const getCurrentLists = () => {
-    axios.get(process.env.REACT_APP_SERVER_BASE_URL + '/getLists').then(response => {
+    axios.get('/getLists').then(response => {
       const { data } = response;
       console.log('data is', data);
       setUserLists(
@@ -37,7 +37,7 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
   const handleAddNewUserListClicked = () => {
     console.log('new item is', newListName);
     axios
-      .post(process.env.REACT_APP_SERVER_BASE_URL + '/addList', {
+      .post('/addList', {
         listname: newListName,
       })
       .then(response => {

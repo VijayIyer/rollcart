@@ -11,7 +11,7 @@ export const AddToList = ({ showListModal, setShowListModal, userLists, setUserL
     for (let i = 0; i < selectedLists.length; i = i + 1) {
       const { listId, listname } = selectedLists[i];
       axios
-        .post(`${process.env.REACT_APP_SERVER_BASE_URL}/${listId}/addItem`, {
+        .post(`/${listId}/addItem`, {
           itemName: item.itemName,
           quantity: 1,
         })

@@ -65,7 +65,7 @@ export const DisplayItems = ({ searchTerm, items }: any) => {
   const [userLists, setUserLists] = useState([]);
 
   const getCurrentLists = () => {
-    axios.get(process.env.REACT_APP_SERVER_BASE_URL + '/getLists').then(response => {
+    axios.get('getLists').then(response => {
       const { data } = response;
       setUserLists(
         data.map((item: { [x: string]: any }) => {
