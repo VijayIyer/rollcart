@@ -26,9 +26,17 @@ class Target(Retailer):
             "X-RapidAPI-Host": api_host
         }
 
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        ### TODO: Generalize exception handling for bad requests across Retailers
+        try:
+            response = requests.request("GET", url, headers=headers, params=querystring)
+        except Exception as e:
+            print(e)
 
-        storeId = response.json()[0]["locations"][0]["location_id"]
+        ## TODO: Handle case when no store in user's location in app -> generalize across Retailers
+        try:
+            storeId = response.json()[0]["locations"][0]["location_id"]
+        except IndexError:
+            storeId = "-1"
 
         return storeId
 
