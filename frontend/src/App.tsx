@@ -17,12 +17,13 @@ function App() {
   const [location, setLocation] = useState('120 Kingston Drive South, 47408');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [userLists, setUserLists] = useState([]);
   const [token, setToken] = useState('');
 
   useEffect(() => {
     if (localStorage.getItem('token')) {
       setToken(localStorage.getItem('token') as string);
-      setAuthToken(token);
+      setAuthToken(localStorage.getItem('token'));
     }
   }, []);
 
@@ -41,8 +42,14 @@ function App() {
         location={location}
         setDisplayLocationPopup={setDisplayLocationPopup}
         setIsLoading={setIsLoading}
-        setProgress={setProgress}></Header>
-      {isLoading ? <LoadingBar /> : <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result}></DisplayItems>}
+        setProgress={setProgress}
+        userLists={userLists}
+        setUserLists={setUserLists}></Header>
+      {isLoading ? (
+        <LoadingBar />
+      ) : (
+        <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result} userLists={userLists} setUserLists={setUserLists}></DisplayItems>
+      )}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}
         setDisplayLocationPopup={setDisplayLocationPopup}

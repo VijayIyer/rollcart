@@ -3,6 +3,7 @@ import './Header.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { clearBrowserLocalStorage } from '../../utils/util';
+import { ManageLists } from '../manageLists/manageLists';
 
 interface appProps {
   zipcode: string;
@@ -13,9 +14,14 @@ interface appProps {
   setDisplayLocationPopup: any;
   setIsLoading: any;
   setProgress: any;
+  userLists: any;
+  setUserLists: any;
 }
 
 function Header(props: appProps) {
+  // const [userLists, setUserLists] = useState([]);
+  // const [userLists, setUserLists] = useState([]);
+
   return (
     <div className="header">
       <a href="#/" className="logo">
@@ -31,8 +37,7 @@ function Header(props: appProps) {
         setIsLoading={props.setIsLoading}
         setProgress={props.setProgress}></SearchBar>
       <Address setDisplayLocationPopup={props.setDisplayLocationPopup} location={props.location}></Address>
-      <AddList></AddList>
-      <Login></Login>
+      <Login userLists={props.userLists} setUserLists={props.setUserLists}></Login>
       <StorePrices></StorePrices>
     </div>
   );
@@ -86,27 +91,12 @@ function Address({ setDisplayLocationPopup, location }: any) {
   );
 }
 
-function AddList() {
-  return (
-    <div className="addList">
-      <button className="addListButton actionButton">
-        <i className="fa-regular fa-rectangle-list"></i>
-        <span> Lists</span>
-      </button>
-    </div>
-  );
-}
-
-function Login() {
+function Login({ userLists, setUserLists }: any) {
   const [showLoggedInUserOptions, setShowLoggedInUserOptions] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
   const navigate = useNavigate();
 
-  const handleOnchange = (e: any) => {
-    console.log(e);
-  };
-
   const userName = localStorage.getItem('userId')?.split('@')[0];
-
   const handleLoggedInUserClicked = () => {
     setShowLoggedInUserOptions(!showLoggedInUserOptions);
   };
@@ -123,7 +113,14 @@ function Login() {
           </button>
           {showLoggedInUserOptions && (
             <div className="userOptions">
-              <p className="userOptionRow">View lists</p>
+              <p
+                className="userOptionRow"
+                onClick={() => {
+                  setShowListModal(!showListModal);
+                  setShowLoggedInUserOptions(false);
+                }}>
+                Manage lists
+              </p>
               <hr />
               <p
                 className="userOptionRow"
@@ -135,6 +132,9 @@ function Login() {
                 Logout
               </p>
             </div>
+          )}
+          {showListModal && (
+            <ManageLists showListModal={showListModal} setShowListModal={setShowListModal} userLists={userLists} setUserLists={setUserLists} />
           )}
         </div>
       ) : (

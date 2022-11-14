@@ -7,6 +7,7 @@ else{
   axios.defaults.baseURL = process.env.REACT_APP_FLASK_API_URL_PROD;
 }
 
+
 export const setAuthToken = (token: any) => {
   if (token) {
     axios.defaults.headers.common = {
