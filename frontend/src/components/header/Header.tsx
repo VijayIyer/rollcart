@@ -47,15 +47,8 @@ function SearchBar({ setQuery, setItemsToDisplay, zipcode, query, setIsLoading, 
     try {
       setProgress(30);
       setIsLoading(true);
-      if (process.env.NODE_ENV !== 'production'){
-        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_LOCAL + `walmartTest?q=${query}&zipcode=${zipcode}`);
-        setItemsToDisplay({ result: data });
-      }
-      else{
-        const { data } = await axios.get(process.env.REACT_APP_FLASK_API_URL_PROD + `walmartTest?q=${query}&zipcode=${zipcode}`);
-        setItemsToDisplay({ result: data });
-      }
-      
+      const { data } = await axios.get(`/walmartTest?q=${query}&zipcode=${zipcode}`);
+      setItemsToDisplay({ result: data });
     } catch (error: any) {
       console.log(error);
     } finally {

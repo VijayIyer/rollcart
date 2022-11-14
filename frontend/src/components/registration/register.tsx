@@ -20,15 +20,8 @@ const Register = () => {
       toast.error('Passwords donot match, please check!');
     }
     const body = { firstname: fullName, lastname: ' ', password, username: email };
-    let baseUri;
-    if (process.env.NODE_ENV !== 'production'){
-      baseUri = process.env.REACT_APP_SERVER_BASE_URL_LOCAL
-    }
-    else{
-      baseUri = process.env.REACT_APP_SERVER_BASE_URL_PROD
-    }
     axios
-      .post(baseUri + '/register', body)
+      .post('/register', body)
       .then(async response => {
         setProgress(100);
         if (response.status === 201) {
