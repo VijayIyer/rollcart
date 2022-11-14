@@ -1,11 +1,14 @@
 body {
-  font-family: Eina, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Helvetica, Arial, sans-serif;
+  font-family: Eina, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   box-sizing: border-box;
 }
 
+:root {
+  --bgcolor: #5837d0;
+}
+
 .header {
-  background-color: #5837d0;
+  background-color: var(--bgcolor);
   display: flex;
   flex-direction: row;
   height: 100px;
@@ -43,7 +46,7 @@ a {
 }
 
 .searchBarInput {
-  width: 600px;
+  width: 500px;
   line-height: 50px;
   background-color: white;
   border-radius: 5px;
@@ -88,11 +91,78 @@ a {
 
 .actionButton {
   width: 100px;
-  height: 50px;
+  height: 47px;
   background-color: white;
   color: black;
   border: none;
   border-radius: 10px;
   font-size: 16px;
   margin: 10px;
+  cursor: pointer;
+}
+
+.userButton {
+  min-width: max-content;
+}
+
+.fa-stack[data-count]:after {
+  position: absolute;
+  right: 0%;
+  top: 0%;
+  content: attr(data-count);
+  font-size: 40%;
+  padding: 0.6em;
+  border-radius: 999px;
+  line-height: 0.75em;
+  background: var(--bgcolor);
+  text-align: center;
+  min-width: 2em;
+  font-weight: bold;
+  color: white;
+  border-style: solid;
+}
+.fa-circle {
+  color: white;
+}
+
+.storePricesButton {
+  width: 50;
+  height: 50;
+  cursor: pointer;
+}
+
+#storePrices {
+  font-size: 1.5em;
+}
+
+.logo1 {
+  cursor: pointer;
+  position: absolute;
+  align-items: center;
+  justify-content: center;
+  top: 5%;
+  left: 45%;
+  font-size: 30px;
+}
+
+.userOptions {
+  display: block;
+  position: absolute;
+  background-color: white;
+  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  right: 170px;
+  top: 77px;
+  width: 150px;
+}
+
+.userOptionRow {
+  padding: 20px;
+  margin: 0px;
+}
+hr {
+  margin: 0px;
+}
+.userOptionRow:hover {
+  background-color: rgb(229, 229, 229);
+  cursor: pointer;
 }

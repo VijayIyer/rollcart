@@ -19,3 +19,5 @@ You will also see any lint errors in the console.
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
+### Environment variables
+Set any environment variable in .env file. Refer [adding-custom-environment-variables](https://create-react-app.dev/docs/adding-custom-environment-variables/)

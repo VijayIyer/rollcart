@@ -3,20 +3,19 @@ from ast import List
 
 import json
 import os,base64
-from PIL import Image
 import requests
 import urllib.request
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 
 from backend.getProductPrices import Retailer
 
 
-params = read_ini()
-BASE_URL = params["KROGER"]["base_url"]
+params = config.Config.KROGER_PARAMS
+BASE_URL = params["BASE_URL"]
 payload='grant_type=client_credentials&scope=product.compact'
-STORESEARCHURL = params["KROGER"]['storesearch_url']
-PRODUCTSEARCHURL = params["KROGER"]['productsearch_url']
-AUTH_TOKEN = params['KROGER']['auth_token']
+STORESEARCHURL = params['STORESEARCH_URL']
+PRODUCTSEARCHURL = params['PRODUCTSEARCH_URL']
+AUTH_TOKEN = params['AUTH_TOKEN']
 
 header = {
   'Content-Type': 'application/x-www-form-urlencoded',
@@ -39,7 +38,9 @@ class Kroger(Retailer):
         'Authorization': "Bearer %s" %(actoken)
         }
 
-
+        
+  def __str__(self):
+        return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str):
 
@@ -75,13 +76,13 @@ class Kroger(Retailer):
 
 
           image = plist['images'][0]['sizes'][0]['url']
-
+          purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
           item ={
                       "itemId": upc,
                       "itemName": desc,
                       "itemPrice": minprice,
                       "itemThumbnail":image,
-                      "productPageUrl":"product_page_url"
+                      "productPageUrl":purl
 
           }
 
@@ -101,9 +102,6 @@ class Kroger(Retailer):
       
       if response.status_code == 200:
         responsevalue = response.json()
-        print("\n LocationId of the store: ",responsevalue['data'][0]['locationId'])
-        print("Address: " ,responsevalue['data'][0]['address'])
-
         return responsevalue['data'][0]['locationId']
 
       return  -1

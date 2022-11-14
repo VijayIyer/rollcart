@@ -1,4 +1,4 @@
-from backend.Retailers.util import read_ini
+from backend.Retailers import config
 from backend.getProductPrices import Item, Retailer
 from typing import Dict, List, Tuple
 import re
@@ -6,12 +6,12 @@ import pgeocode
 import requests
 from geopy.distance import geodesic
 
-params = read_ini()
-BASE_URL = params["WALGREENS"]["base_url"]
-WALGREENS_STORESEARCH_ENDPOINT = params["WALGREENS"]["storesearch_url"]
-WALGREENS_PRODUCTSEARCH_ENDPOINT = params["WALGREENS"]["productsearch_url"]
-DEFAULT_STORE_RADIUS = params["WALGREENS"]["default_radius"]
-IN_STOCK = params["WALGREENS"]["in_stock_string"]
+params = config.Config.WALGREENS_PARAMS
+BASE_URL = params["BASE_URL"]
+WALGREENS_STORESEARCH_ENDPOINT = params["STORESEARCH_URL"]
+WALGREENS_PRODUCTSEARCH_ENDPOINT = params["PRODUCTSEARCH_URL"]
+DEFAULT_STORE_RADIUS = params["DEFAULT_RADIUS"]
+IN_STOCK = params["IN_STOCK_STRING"]
 
 
 class requestResult:
@@ -21,7 +21,7 @@ class requestResult:
 
 
 def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requestResult:
-    print(WALGREENS_STORESEARCH_ENDPOINT)
+    # print(WALGREENS_STORESEARCH_ENDPOINT)
 
     data = {
         "lat": lat,
@@ -33,7 +33,7 @@ def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requ
         "sameday": "true",
     }
     resp = requests.post(url=WALGREENS_STORESEARCH_ENDPOINT, data=data)
-    print(resp.status_code)
+    # print(resp.status_code)
     if resp.status_code == 200:
         return requestResult(True, resp.json())
     else:
@@ -68,21 +68,23 @@ class Walgreens(Retailer):
     def __init__(self):
         self.dist = pgeocode.Nominatim("us")
 
+    def __str__(self):
+        return 'Walgreens'
+        
     def getNearestStoreId(self, userLocation):
         nearestStoreId = -1
         nearestDistance = float("inf")
         userData = self.dist.query_postal_code(userLocation)
         userLat = userData.latitude
         userLon = userData.longitude
-        print(userLat, userLon)
         storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
         if storeLocatorResults.success:
-            print("store locator result successful")
+            # print("store locator result successful")
             for store in storeLocatorResults.data["results"]:
                 storeLon = store["longitude"]
                 storeLat = store["latitude"]
                 storeId = store["store"]["storeNumber"]
-                print(storeLon, storeLat, storeId)
+                # print(storeLon, storeLat, storeId)
                 curDistance = geodesic(
                     (storeLat, storeLon), (userLat, userLon)).miles
                 if curDistance < nearestDistance:
@@ -122,19 +124,17 @@ class Walgreens(Retailer):
                 # replace with logger
                 # print(len(data["products"]))
                 # print(data["products"])
-                print(IN_STOCK)
                 for product in resp.data["products"]:
                     productInfo = product["productInfo"]
                     if "storeInv" in productInfo.keys():
-                        print(productInfo["storeInv"] == IN_STOCK)
                         if productInfo["storeInv"] == IN_STOCK:
                             # this is where desired fields can be added
                             products.append(Item(itemName=productInfo["productName"],
                                                  itemId=productInfo["upc"],
                                                  itemPrice=self.getCorrectPrice(
                                 productInfo["priceInfo"]["regularPrice"]),
-                                itemThumbnail=BASE_URL +
-                                productInfo["productURL"],
+                                itemThumbnail="http:" +
+                                productInfo["imageUrl"],
                                 productPageUrl=BASE_URL+productInfo["productURL"])
                             )
                 return products
