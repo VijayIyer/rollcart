@@ -3,6 +3,7 @@ import './errorPage.css';
 
 const ErrorPage = () => {
   const error: any = useRouteError();
+  console.log('Error is', error);
   return (
     <div id="errorPage">
       <h1>Oops!</h1>

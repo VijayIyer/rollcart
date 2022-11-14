@@ -18,6 +18,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [token, setToken] = useState('');
+  const [selectedList, setSelectedList] = useState();
 
   useEffect(() => {
     if (localStorage.getItem('token')) {
@@ -41,7 +42,9 @@ function App() {
         location={location}
         setDisplayLocationPopup={setDisplayLocationPopup}
         setIsLoading={setIsLoading}
-        setProgress={setProgress}></Header>
+        setProgress={setProgress}
+        selectedList={selectedList}
+        setSelectedList={setSelectedList}></Header>
       {isLoading ? <LoadingBar /> : <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result}></DisplayItems>}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}

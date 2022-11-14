@@ -3,7 +3,8 @@ import './Header.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { clearBrowserLocalStorage } from '../../utils/util';
-import { ManageLists } from '../manageLists/manageLists';
+import { ManageLists } from '../manageLists copy/manageLists';
+// import { ManageLists } from '../manageLists/manageLists';
 
 interface appProps {
   zipcode: string;
@@ -14,6 +15,8 @@ interface appProps {
   setDisplayLocationPopup: any;
   setIsLoading: any;
   setProgress: any;
+  selectedList: any;
+  setSelectedList: any;
 }
 
 function Header(props: appProps) {
@@ -32,8 +35,8 @@ function Header(props: appProps) {
         setIsLoading={props.setIsLoading}
         setProgress={props.setProgress}></SearchBar>
       <Address setDisplayLocationPopup={props.setDisplayLocationPopup} location={props.location}></Address>
-      <AddList></AddList>
-      <Login></Login>
+      <AddList selectedList={props.selectedList}></AddList>
+      <Login selectedList={props.selectedList} setSelectedList={props.setSelectedList}></Login>
       <StorePrices></StorePrices>
     </div>
   );
@@ -87,7 +90,7 @@ function Address({ setDisplayLocationPopup, location }: any) {
   );
 }
 
-function AddList() {
+function AddList({ selectedList }: any) {
   return (
     <div className="addList">
       <button className="addListButton actionButton">
@@ -98,11 +101,11 @@ function AddList() {
   );
 }
 
-function Login() {
+function Login({ selectedList, setSelectedList }: any) {
   const [showLoggedInUserOptions, setShowLoggedInUserOptions] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [userLists, setUserLists] = useState([]);
-  const [selectedList, setSelectedList] = useState();
+
   const navigate = useNavigate();
 
   const handleOnchange = (e: any) => {

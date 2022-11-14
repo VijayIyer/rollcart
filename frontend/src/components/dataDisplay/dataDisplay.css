@@ -15,6 +15,16 @@
   box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
+.favoriteItem {
+  position: relative;
+  left: 250px;
+  cursor: pointer;
+}
+
+.redHeartIcon {
+  color: red;
+}
+
 .itemName {
   display: -webkit-box;
   font-size: 15px;
@@ -29,12 +39,19 @@
 
 .itemThumbnail {
   position: relative;
-  left: 30%;
+  left: 25%;
 }
 
 .itemThumbnailLeft {
   position: relative;
-  left: 20%;
+  left: 15%;
+}
+
+.addItemRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .addItemButton {
