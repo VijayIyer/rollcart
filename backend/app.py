@@ -282,6 +282,24 @@ def addItem(user, listId:int):
         return make_response('Error adding Item', 400)
 
 
+@app.route('/<int:listId>', methods=['DELETE'])
+@token_required
+def addItem(user, listId:int):
+    '''
+    adds item to a list for a particular user
+    '''
+    try:
+        with Session() as session:
+            list = session.query(List).filter(List.list_id==listId)
+            session.delete(list)
+            session.commit()
+        return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
+    except Exception as e:
+        print(e)
+        return make_response('Error Deleting List', 500)
+
+
+
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
 def getPrices(user, listId:int):
@@ -345,14 +363,13 @@ def getStorePrices(user, listId:int, storeId:int):
 def removeItem(user, listId, itemId):
     try:
         with Session() as session:
-            item = session.query(Item).filter(Item.item_id == itemId).one()
-            # listItems = session.query(List).filter(List.user_id == userId and List.list_id == listId and List.item_id == itemId).all()
-            # for listItem in listItems:
-            #     session.delete(listItem)
-            session.delete(item)
+            userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id).\
+                filter(UserListItem.item_id==itemId)\
+                .one()
+            session.delete(userListItem)
             session.commit()
         return make_response({'message': 'Item {} deleted successfully'\
-            .format(item.item_id)}, 200)
+            .format(userListItem.item_id)}, 200)
     except Exception as e:
         print(e)
         return make_response('unable to remove item from list', 500)
@@ -366,6 +383,7 @@ def index():
 
 
 @app.route('/getProducts', methods=['GET'])
+@token_required
 def getProducts():
     try:
         args = request.args
