@@ -302,9 +302,9 @@ def addItem(user, listId:int):
 
 @app.route('/<int:listId>', methods=['DELETE'])
 @token_required
-def addItem(user, listId:int):
+def removeList(user, listId:int):
     '''
-    adds item to a list for a particular user
+    remove list specified by listid parameter
     '''
     try:
         with Session() as session:
@@ -374,7 +374,7 @@ def getPrices(user, listId:int):
         return make_response({'message':'Unable to get prices'}, 400)
 
 
-@app.route('/<int:listId>/<str:storeName>/getPrices', methods=['GET'])
+@app.route('/<int:listId>/<string:storeName>/getPrices', methods=['GET'])
 @token_required
 def getStorePrices(user, listId:int, storeName:str):
     try:
