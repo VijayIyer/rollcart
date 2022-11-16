@@ -374,22 +374,25 @@ def getPrices(user, listId:int):
         return make_response({'message':'Unable to get prices'}, 400)
 
 
-@app.route('/<int:listId>/<int:storeId>/getPrices', methods=['GET'])
+@app.route('/<int:listId>/<str:storeName>/getPrices', methods=['GET'])
 @token_required
-def getStorePrices(user, listId:int, storeId:int):
+def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
+            storeId = session.query(Store).filter(Store.store_name == storeName)
             userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
-            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
-            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.item_id.in_(itemIds) and Price.store_id == storeId)
+            userListItemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
+            itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
+            .filter(Price.user_list_item_id.in_(userListItemIds) and Price.store_id == storeId)
             results = []
             for price in itemStorePrices:
-                ItemStorePrice = dict()
-                ItemStorePrice['itemName'] = price.item_name
-                ItemStorePrice['storeId'] = price.store_id
-                ItemStorePrice['totalPrice'] = price.rec_product_price
-                results.append(ItemStorePrice)
+                itemStorePrice = dict()
+                itemStorePrice['itemName'] = price.item_name
+                itemStorePrice['storeId'] = price.store_id
+                itemStorePrice['totalPrice'] = price.price
+                itemStorePrice['item_image'] = price.item_image
+                itemStorePrice['item_url'] = price.item_url
+                results.append(itemStorePrice)
         return make_response(results, 200)
     except Exception as e:
         print(e)
