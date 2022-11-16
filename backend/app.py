@@ -261,22 +261,40 @@ def addItem(user, listId:int):
     try:
         returnItemId = None
         with Session() as session:
-            # checking user exists
-            if session.query(User).filter(User.user_id == user.user_id).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
-            if session.query(List).filter(List.list_id == listId).count() == 0:
-                return make_response({'message':'List with id {} not found'.format(listId)}, 400)
             body = request.get_json()
-            newItem = Item(item_name = body['itemName'])
-            session.add(newItem)
-            session.flush()
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).first() # create issue, weird code
-            newUserListItem = UserListItem(user_list_id = userListId[0], item_id = newItem.item_id, quantity = body['quantity'])
-            session.add(newUserListItem)
-            session.flush()
-            returnItemId = newItem.item_id
-            session.commit()
-        return make_response('Item {} added successfully to {}'.format(returnItemId, listId), 200)
+            # check if item exists
+            if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
+                newItem = Item(item_name = body['itemName'])
+                session.add(newItem)
+                session.flush()
+                returnItemId = newItem.item_id
+                userListId = session.query(UserList.user_list_id).\
+                    filter(UserList.user_id == user.user_id and UserList.list_id == listId).\
+                        first() # create issue, weird code
+                newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
+                session.add(newUserListItem)
+                session.flush()
+                session.commit()
+            else:
+                returnItemId = session.query(Item).filter(Item.item_name == body['item_name']).one()
+                # check if item exists in same list
+                if session.query(UserListItem).join(UserList, UserList.user_list_id\
+                     == UserListItem.user_list_id)\
+                    .filter(UserListItem.item_id == returnItemId\
+                         and UserList.user_id == user.user_id and\
+                             UserList.list_id == listId).count() == 0:
+                    newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
+                    session.add(newUserListItem)
+                    session.commit()
+                else:
+                    userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id)\
+                    .filter(UserListItem.item_id == returnItemId and\
+                         UserList.user_id == user.user_id and\
+                             UserList.list_id == listId).one()
+                    userListItem.quantity = body['quantity']
+                    session.commit()
+
+        return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 200)
     except Exception as e:
         print(e)
         return make_response('Error adding Item', 400)
@@ -329,7 +347,27 @@ def getPrices(user, listId:int):
                         prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
                     else:
                         prices['allItemsAvailable'] = False
-                results.append(prices)                               
+                    
+                    # adding price information to table
+                    storeId = session.query(Store).filter(Store.store_name == str(retailer))
+                    # check if price information for item already exists in table
+                    if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id).count == 0:
+                        newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
+                            price=minPriceItem['itemPrice']*userListItem.quantity\
+                                ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
+                                    ,item_image=minPriceItem['itemThumbnail'])
+                        session.add(newPrice)
+                    else:
+                        existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
+                        existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
+                        existingPrice.item_url=minPriceItem['productPageUrl']
+                        existingPrice.item_image=minPriceItem['itemThumbnail']
+                        
+                session.commit()
+                results.append(prices)   
+                # adding results to database tables
+                
+
             return make_response(results, 200)
     except Exception as e:
         print(e)
