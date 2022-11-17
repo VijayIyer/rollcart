@@ -398,6 +398,7 @@ def getPrices(user, listId:int):
             return make_response(results, 200)
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return make_response({'message':'Unable to get prices'}, 400)
 
 
