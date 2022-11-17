@@ -11,7 +11,7 @@ from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
@@ -264,12 +264,12 @@ def addItem(user, listId:int):
             body = request.get_json()
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['itemName'])
+                newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
                 userListId = session.query(UserList.user_list_id).\
-                    filter(UserList.user_id == user.user_id and UserList.list_id == listId).\
+                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
                         first() # create issue, weird code
                 newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
                 session.add(newUserListItem)
@@ -280,9 +280,9 @@ def addItem(user, listId:int):
                 # check if item exists in same list
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
-                    .filter(UserListItem.item_id == returnItemId\
-                         and UserList.user_id == user.user_id and\
-                             UserList.list_id == listId).count() == 0:
+                    .filter(and_(UserListItem.item_id == returnItemId\
+                         ,UserList.user_id == user.user_id\
+                         ,UserList.list_id == listId)).count() == 0:
                     newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
                     session.add(newUserListItem)
                     session.commit()
@@ -325,52 +325,62 @@ def getPrices(user, listId:int):
     try:
         with Session() as session:
             zip = request.args.get('zipcode')
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
-            print(userListId)
+            userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
+            # print(userListId)
             userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
-            print(userListItems)
+            # print(userListItems)
             results = []
             for retailer in retailers:
-                storeId = retailer.getNearestStoreId(zip)
-                prices = dict()
-                prices['store_name'] = str(retailer)
-                prices['total_price'] = 0
-                prices['storeId'] = storeId
-                prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
-                prices['allItemsAvailable'] = True
-                for userListItem in userListItems:
-                    item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
-                    filter(UserListItem.item_id == userListItem.item_id).scalar()
-                    searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
-                    if len(searchResults) > 0:
-                        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-                        prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
-                    else:
-                        prices['allItemsAvailable'] = False
-                    
-                    # adding price information to table
-                    storeId = session.query(Store).filter(Store.store_name == str(retailer))
-                    # check if price information for item already exists in table
-                    if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id).count == 0:
-                        newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
-                            price=minPriceItem['itemPrice']*userListItem.quantity\
-                                ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
-                                    ,item_image=minPriceItem['itemThumbnail'])
-                        session.add(newPrice)
-                    else:
-                        existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
-                        existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
-                        existingPrice.item_url=minPriceItem['productPageUrl']
-                        existingPrice.item_image=minPriceItem['itemThumbnail']
-                        
-                session.commit()
-                results.append(prices)   
-                # adding results to database tables
+                try:
+                    storeId = retailer.getNearestStoreId(zip)
+                    prices = dict()
+                    prices['store_name'] = str(retailer)
+                    prices['total_price'] = 0
+                    prices['storeId'] = storeId
+                    prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
+                    prices['allItemsAvailable'] = True
                 
+                    
+                    for userListItem in userListItems:
+                        item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                        filter(UserListItem.item_id == userListItem.item_id).scalar()
+                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
+                        if len(searchResults) > 0:
+                            minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                            prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                            # adding price information to table
+                            storeId = session.query(Store.store_id).filter(Store.store_name == str(retailer))
+                            # print(str(retailer))
+                            # check if price information for item already exists in table
+                            
+                            if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
+                                print('this item\'s price not yet added')
+                                newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
+                                    price=minPriceItem['itemPrice']*userListItem.quantity\
+                                        ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
+                                            ,item_image=minPriceItem['itemThumbnail'])
+                                
+                                session.add(newPrice)
+                            else:
+                                existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
+                                existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
+                                existingPrice.item_url=minPriceItem['productPageUrl']
+                                existingPrice.item_image=minPriceItem['itemThumbnail']
+                            
+                        else:
+                            prices['allItemsAvailable'] = False
+                    session.commit()
+                    results.append(prices)
+                    # adding results to database tables
+                except Exception as e:
+                    
+                    print('retailer {} did not return any items:{}'.format(str(retailer), e))
+                    continue
 
             return make_response(results, 200)
     except Exception as e:
         print(e)
+        traceback.print_exc()
         return make_response({'message':'Unable to get prices'}, 400)
 
 
@@ -379,15 +389,23 @@ def getPrices(user, listId:int):
 def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
-            storeId = session.query(Store).filter(Store.store_name == storeName)
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
-            userListItemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
+            storeId = session.query(Store.store_id).filter(Store.store_name == storeName)
+            
+            userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
+            # print(userListId)
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
+            # print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.user_list_item_id.in_(userListItemIds) and Price.store_id == storeId)
+            .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
+            
+            # print(itemStorePrices)
             results = []
             for price in itemStorePrices:
                 itemStorePrice = dict()
-                itemStorePrice['itemName'] = price.item_name
+                itemName = session.query(Item.item_name).join(UserListItem, Item.item_id == UserListItem.item_id)\
+                    .filter(UserListItem.user_list_item_id == price.user_list_item_id).scalar()
+                # print(itemName)
+                itemStorePrice['itemName'] = itemName
                 itemStorePrice['storeId'] = price.store_id
                 itemStorePrice['totalPrice'] = price.price
                 itemStorePrice['item_image'] = price.item_image
