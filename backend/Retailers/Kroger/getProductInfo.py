@@ -1,18 +1,24 @@
 
 
 import json
+
+import os,base64
 import requests
-from backend.Retailers.util import read_ini
 
-from backend.getProductPrices import Retailer
+from Retailers import config
+
+import requests
 
 
-params = read_ini()
-BASE_URL = params["KROGER"]["base_url"]
+from getProductPrices import Retailer
+
+
+params = config.Config.KROGER_PARAMS
+BASE_URL = params["BASE_URL"]
 payload='grant_type=client_credentials&scope=product.compact'
-STORESEARCHURL = params["KROGER"]['storesearch_url']
-PRODUCTSEARCHURL = params["KROGER"]['productsearch_url']
-AUTH_TOKEN = params['KROGER']['auth_token']
+STORESEARCHURL = params['STORESEARCH_URL']
+PRODUCTSEARCHURL = params['PRODUCTSEARCH_URL']
+AUTH_TOKEN = params['AUTH_TOKEN']
 
 header = {
   'Content-Type': 'application/x-www-form-urlencoded',
@@ -35,7 +41,9 @@ class Kroger(Retailer):
         'Authorization': "Bearer %s" %(actoken)
         }
 
-
+        
+  def __str__(self):
+        return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str):
 

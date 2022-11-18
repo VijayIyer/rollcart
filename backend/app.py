@@ -1,13 +1,14 @@
-from crypt import methods
 from distutils.log import debug
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
+from Retailers import config
 from flask import Flask, request, make_response
-from backend.Retailers.Kroger.getProductInfo import Kroger
-from backend.Retailers.walmart.getProductinfo import Walmart
-from backend.Retailers.walgreens.getProductInfo import *
-from backend.Retailers.target.getProductInfo import Target
+from Retailers.util import getUniqueItems
+from Retailers.Kroger.getProductInfo import Kroger
+from Retailers.walmart.getProductinfo import Walmart
+from Retailers.walgreens.getProductInfo import *
+from Retailers.target.getProductInfo import Target
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
@@ -15,20 +16,23 @@ from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
-
-USER_NAME = "rollcartadmin"
-PASSWORD = "!grocerybudget1"
-SERVER_NAME = "rollcartdb.mysql.database.azure.com"
-PORT_NUMBER = "3306"
-DATABASE_NAME = "rollcartv2"
-
-db_connect_string="mysql+pymysql://rollcartadmin:!grocerybudget1@rollcartdb.mysql.database.azure.com:3306/rollcartv2"
-ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
+import random
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'SECRET'
+
+# Using a production configuration
+#app.config.from_object('config.ProdConfig')
+
+# Using a development configuration
+app.config.from_object(config.DevConfig)
+
+
 CORS(app)
     
+
+DB_PARAMS = app.config['DATABASE_PARAMS']
+db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
+ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
 # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -49,6 +53,9 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
+# retailers
+retailers = [Target(), Walgreens(), Kroger(), Walmart()]
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -57,10 +64,10 @@ def token_required(f):
         else:
             return jsonify({'message':'Token is missing'}), 401
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'])
+            data = jwt.decode(token, app.config['SECRET_KEY'],algorithms='HS256')
             with Session() as session:
                 currentUser = session.query(User).filter(User.user_id == data['user_id']).first()
-        except:
+        except:            
             return jsonify({'message':'Token is invalid'}), 401
         
         return f(currentUser, *args, **kwargs)
@@ -152,23 +159,23 @@ def getUsers():
         return make_response('Error getting Users', 400)
 
 
-@app.route('/user/<int:userId>/addList', methods=['POST'])
+@app.route('/addList', methods=['POST'])
 @token_required
-def addList(userId:int):
+def addList(user):
     try:
         returnListId = None
         with Session() as session:
             body = request.get_json()
             # checking user exists
-            if session.query(User).filter(User.user_id == userId).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
+            if session.query(User).filter(User.user_id == user.user_id).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
             # adding to list table
             newList = List(list_name = body['listname'])
             session.add(newList)
             # flush() will allow to return id of inserted row
             session.flush()
             # adding to user list relationship table
-            newUserList = UserList(user_id = userId, list_id = newList.list_id)
+            newUserList = UserList(user_id = user.user_id, list_id = newList.list_id)
             session.add(newUserList)
             # flush() will allow to return id of inserted row
             session.flush()
@@ -180,24 +187,24 @@ def addList(userId:int):
         return make_response({'message':'Unable to add list'}, 500)
 
 
-@app.route('/user/<int:userId>/getLists', methods=['GET'])
+@app.route('/getLists', methods=['GET'])
 @token_required
-def getLists(userId:int):
+def getLists(user):
     '''
     Gets List Names created by user with userid provided in the request
     '''
     try:
         with Session() as session:
             # checking user exists
-            if session.query(User).filter(User.user_id == userId).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
-            listIds = session.query(UserList.list_id).filter(UserList.user_id == userId)
+            if session.query(User).filter(User.user_id == user.user_id).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
+            listIds = session.query(UserList.list_id).filter(UserList.user_id == user.user_id)
             lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
             .filter(List.list_id.in_(listIds))
             listResults  = []
             for list in lists:
                 listDict = dict()
-                listDict['listname'] = list.list_id
+                listDict['listId'] = list.list_id
                 listDict['listname'] = list.list_name
                 listResults.append(listDict)
         return make_response(listResults, 200)
@@ -208,7 +215,7 @@ def getLists(userId:int):
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
-def getListItems(listId:int):
+def getListItems(user, listId:int):
     '''
     Gets items in the list with listid provided in the query
     '''
@@ -231,7 +238,7 @@ def getListItems(listId:int):
 
 @app.route('/getItems', methods=['GET'])
 @token_required
-def getItems():
+def getItems(user):
     try:
         with Session() as session:
             q = request.args['q']
@@ -248,9 +255,9 @@ def getItems():
         return make_response({'message':'unable to get items'}, 400)
 
 
-@app.route('/<int:userId>/<int:listId>/addItem', methods=['POST'])
+@app.route('/<int:listId>/addItem', methods=['POST'])
 @token_required
-def addItem(userId:int, listId:int):
+def addItem(user, listId:int):
     '''
     adds item to a list for a particular user
     '''
@@ -258,15 +265,15 @@ def addItem(userId:int, listId:int):
         returnItemId = None
         with Session() as session:
             # checking user exists
-            if session.query(User).filter(User.user_id == userId).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(userId)}, 400)
+            if session.query(User).filter(User.user_id == user.user_id).count() == 0:
+                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
             if session.query(List).filter(List.list_id == listId).count() == 0:
                 return make_response({'message':'List with id {} not found'.format(listId)}, 400)
             body = request.get_json()
             newItem = Item(item_name = body['itemName'])
             session.add(newItem)
             session.flush()
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).first() # create issue, weird code
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).first() # create issue, weird code
             newUserListItem = UserListItem(user_list_id = userListId[0], item_id = newItem.item_id, quantity = body['quantity'])
             session.add(newUserListItem)
             session.flush()
@@ -278,34 +285,48 @@ def addItem(userId:int, listId:int):
         return make_response('Error adding Item', 400)
 
 
-@app.route('/<int:userId>/<int:listId>/getPrices', methods=['GET'])
+@app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
-def getPrices(userId:int, listId:int):
+def getPrices(user, listId:int):
+    
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).one()
-            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
-            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.item_id.in_(itemIds))
+            zip = request.args.get('zipcode')
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
+            print(userListId)
+            userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
+            print(userListItems)
             results = []
-            for price in itemStorePrices:
-                ItemStorePrice = dict()
-                ItemStorePrice['itemName'] = price.item_name
-                ItemStorePrice['storeId'] = price.store_id
-                ItemStorePrice['totalPrice'] = price.rec_product_price
-                results.append(ItemStorePrice)
+            for retailer in retailers:
+                storeId = retailer.getNearestStoreId(zip)
+                prices = dict()
+                prices['store_name'] = str(retailer)
+                prices['total_price'] = 0
+                prices['storeId'] = storeId
+                prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
+                prices['allItemsAvailable'] = True
+                for userListItem in userListItems:
+                    item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                    filter(UserListItem.item_id == userListItem.item_id).scalar()
+                    searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
+                    if len(searchResults) > 0:
+                        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                        prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                    else:
+                        prices['allItemsAvailable'] = False
+                results.append(prices)                               
             return make_response(results, 200)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to get prices'}, 400)
 
 
-@app.route('/<int:userId>/<int:listId>/<int:storeId>/getPrices', methods=['GET'])
+@app.route('/<int:listId>/<int:storeId>/getPrices', methods=['GET'])
 @token_required
-def getStorePrices(userId:int, listId:int, storeId:int):
+def getStorePrices(user, listId:int, storeId:int):
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == userId and UserList.list_id == listId).one()
+            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
             itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
             itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
             .filter(Price.item_id.in_(itemIds) and Price.store_id == storeId)
@@ -322,9 +343,9 @@ def getStorePrices(userId:int, listId:int, storeId:int):
         return make_response({'message':'Unable to get prices'}, 400)
 
 
-@app.route('/<int:userId>/<int:listId>/<int:itemId>', methods=['DELETE'])
+@app.route('/<int:listId>/<int:itemId>', methods=['DELETE'])
 @token_required
-def removeItem(userId, listId, itemId):
+def removeItem(user, listId, itemId):
     try:
         with Session() as session:
             item = session.query(Item).filter(Item.item_id == itemId).one()
@@ -345,6 +366,19 @@ def index():
     return {"welcomeMessage": "Hi there! We're currently getting things setup and should be ready for use in a few weeks!"}
 
 # Only for testing
+
+
+@app.route('/getProducts', methods=['GET'])
+def getProducts():
+    try:
+        args = request.args
+        items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
+        print(len(items))
+        items = getUniqueItems(items, k='itemName')
+        print(len(items))
+        return make_response(items, 200)
+    except:
+        return make_response({'message:Error retrieving products'}, 400)
 
 
 @app.route('/walmartTest', methods=['GET'])
@@ -378,13 +412,44 @@ def krogerTestEndpoint():
     return k.getProductsInNearByStore(args["q"], args["zipcode"])
 
     
-
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
 @app.route('/getItems')
 def test():
     with open('./data.json', 'r') as j:     
         out = json.loads(j.read())
     return out 
 
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
+@app.route('/getStoreItems')
+def test2():
+    with open('./data.json', 'r') as j:     
+        out = json.loads(j.read())
+    return out 
+
+# TODO: Need to remove the below endpoint. Only used for mocking frontend.
+@app.route("/getPrices/<int:listId>")
+def test1(listId: int):
+    print("List id requested is",listId)
+    return [
+        {
+            "store":"walmart",
+            "price": 20
+        },
+        {
+            "store": "target",
+            "price": 21.21
+        },
+        {
+            "store": "walgreens",
+            "price": 11.21
+        },
+        {
+            "store": "kroger",
+            "price": 11.21
+        },
+        
+    ]
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 

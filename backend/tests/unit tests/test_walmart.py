@@ -1,4 +1,5 @@
-from backend.Retailers.walmart.getProductinfo import Walmart
+from Retailers.walmart.getProductinfo import Walmart
+
 
 TEST_ZIPCODE = "47401"
 TEST_PRODUCT = "milk"

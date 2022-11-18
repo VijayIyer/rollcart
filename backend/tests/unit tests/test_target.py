@@ -1,5 +1,7 @@
 
-from backend.Retailers.target.getProductInfo import Target
+from Retailers.target.getProductInfo import Target
+
+
 TEST_ZIPCODE = "47401"
 TEST_PRODUCT = "milk"
 def test_target_store_endpoint():

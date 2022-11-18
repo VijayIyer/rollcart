@@ -1,0 +1,72 @@
+.registerContainer {
+  padding: 16px;
+  width: 300px;
+  padding-left: 200px;
+  /* position: absolute; */
+  /* left: 10%; */
+}
+
+/* Full-width input fields */
+.formField {
+  width: 100%;
+  padding: 15px;
+  /* margin: 5px 0 22px 0; */
+  display: inline-block;
+  border: none;
+  /* background: #f1f1f1; */
+  border: 0.4px black solid;
+  font-size: large;
+}
+
+/* Set a style for the submit/register button */
+.submitBtn {
+  position: relative;
+  left: 30%;
+  background-color: var(--bgcolor);
+  color: white;
+  padding: 10px 15px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  /* width: 50%; */
+  opacity: 0.9;
+  font-size: large;
+  font-weight: 520;
+  border-radius: 5px;
+}
+
+.submitBtn:hover {
+  opacity: 1;
+}
+
+/* Add a blue text color to links */
+a {
+  color: dodgerblue;
+}
+
+/* Set a grey background color and center the text of the "sign in" section */
+.signin {
+  text-align: center;
+}
+.signinText {
+  position: relative;
+  top: 20%;
+}
+
+.field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 5px 0 22px 0;
+}
+.fieldIcon {
+  margin: 10px;
+}
+
+.registration-container {
+  display: flex;
+  flex-direction: row;
+  /* border: 1px solid red; */
+  margin: 50px 50px;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}

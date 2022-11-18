@@ -1,4 +1,6 @@
-from backend.app import app
+
+from app import app
+from Retailers import config
 
 
 def test_register_user():

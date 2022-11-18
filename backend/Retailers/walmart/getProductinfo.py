@@ -1,18 +1,21 @@
-from backend.Retailers.util import read_ini
-from backend.getProductPrices import Retailer
+from Retailers import config
+from getProductPrices import Retailer
 import pandas as pd
 from serpapi import GoogleSearch
 import pgeocode
 from geopy.distance import geodesic
 
 
-params = read_ini()
-api_key = params["WALMART"]["api_key"]
-device = params["WALMART"]["device"]
-engine = params["WALMART"]["engine"]
+params = config.Config.WALMART_PARAMS
+api_key = params["API_KEY"]
+device = params["DEVICE"]
+engine = params["ENGINE"]
 
 
 class Walmart(Retailer):
+    def __str__(self):
+        return 'Walmart'
+
     def __init__(self):
         self.walmartStoreData = pd.read_csv("Retailers/walmart/walmartStoreData.csv")
         self.dist = pgeocode.Nominatim("us")
@@ -44,6 +47,9 @@ class Walmart(Retailer):
         self.params["store_id"] = self.getNearestStoreId(zipcode)
         out = GoogleSearch(self.params).get_dictionary()
         response = []
+        if "organic_results" not in out:
+            print(out)
+            return response
         for item in out["organic_results"]:
             response.append(
                 {

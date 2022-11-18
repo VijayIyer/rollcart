@@ -1,4 +1,7 @@
 import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { Toaster } from 'react-hot-toast';
+import { useLocation } from 'react-router-dom';
+import { setAuthToken } from './auth/auth';
 import { DisplayItems } from './components/dataDisplay/dataDisplay';
 import Header from './components/header/Header';
 import { LoadingBar } from './components/loadingBar/loadingBar';
@@ -14,6 +17,15 @@ function App() {
   const [location, setLocation] = useState('120 Kingston Drive South, 47408');
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [userLists, setUserLists] = useState([]);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      setToken(localStorage.getItem('token') as string);
+      setAuthToken(localStorage.getItem('token'));
+    }
+  }, []);
 
   useEffect(() => {
     setSearchTerm(query);
@@ -30,13 +42,13 @@ function App() {
         location={location}
         setDisplayLocationPopup={setDisplayLocationPopup}
         setIsLoading={setIsLoading}
-        setProgress={setProgress}></Header>
+        setProgress={setProgress}
+        userLists={userLists}
+        setUserLists={setUserLists}></Header>
       {isLoading ? (
         <LoadingBar />
       ) : (
-        <DisplayItems
-          searchTerm={searchTerm}
-          items={itemsToDisplay.result}></DisplayItems>
+        <DisplayItems searchTerm={searchTerm} items={itemsToDisplay.result} userLists={userLists} setUserLists={setUserLists}></DisplayItems>
       )}
       <GoogleAutoCompleteLocation
         displayLocationPopUp={displayLocationPopUp}
