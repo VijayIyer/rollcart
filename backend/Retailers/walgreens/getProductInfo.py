@@ -12,6 +12,7 @@ WALGREENS_STORESEARCH_ENDPOINT = params["STORESEARCH_URL"]
 WALGREENS_PRODUCTSEARCH_ENDPOINT = params["PRODUCTSEARCH_URL"]
 DEFAULT_STORE_RADIUS = params["DEFAULT_RADIUS"]
 IN_STOCK = params["IN_STOCK_STRING"]
+print(params["BASE_URL"])
 
 
 class requestResult:
@@ -42,6 +43,7 @@ def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requ
 
 
 def getProductSearchResults(url: str, search_term: str, store_number: str) -> requestResult:
+    
     data = {
             "p": "1",
             "s": "72",
