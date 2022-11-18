@@ -1,4 +1,5 @@
 from Retailers.walgreens.getProductInfo import Walgreens
+
 TEST_ZIPCODE = "47401"
 TEST_PRODUCT = "milk"
 

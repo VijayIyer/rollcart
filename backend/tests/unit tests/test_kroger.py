@@ -1,5 +1,6 @@
 
 from Retailers.Kroger.getProductInfo import Kroger
+
 TEST_ZIPCODE = "47401"
 TEST_PRODUCT = "milk"
 

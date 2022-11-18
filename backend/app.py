@@ -26,7 +26,9 @@ app = Flask(__name__)
 # Using a development configuration
 app.config.from_object(config.DevConfig)
 
+
 CORS(app)
+    
 
 DB_PARAMS = app.config['DATABASE_PARAMS']
 db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
@@ -136,6 +138,7 @@ def logout():
 
 
 #  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
+
 def getUsers():
     '''
     gets all users in the database

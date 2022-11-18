@@ -1,5 +1,6 @@
 from Retailers.walmart.getProductinfo import Walmart
 
+
 TEST_ZIPCODE = "47401"
 TEST_PRODUCT = "milk"
 def test_walmart_store_endpoint():
