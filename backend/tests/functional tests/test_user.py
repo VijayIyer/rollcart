@@ -10,10 +10,9 @@ TEST_PASSWORD = "testingpassword"
 TEST_TOKEN = ""
 TEST_USERLIST = 'Testing list'
 
-@pytest.mark.skip(reason="skipping as user is registered")
  
 def test_register_user():
-
+    
     testapp = app.test_client()
 
     data = {        "username" : TEST_USERNAME,
@@ -25,7 +24,6 @@ def test_register_user():
 
     assert response.status_code == 201 or 409
 
-@pytest.mark.skip(reason="skipping as user is registered")
 
 def test_login():
     global TEST_TOKEN
@@ -38,8 +36,6 @@ def test_login():
     assert res['message'] == 'login successful'
     assert res['token'] != ""
     TEST_TOKEN = res['token']
-
-@pytest.mark.skip(reason="skipping as user is registered")
 
 
 
@@ -54,13 +50,3 @@ def test_logout():
     response = testapp.post('/logout',json=data)
     
     assert response.status_code == 200
-@pytest.mark.skip(reason="skipping as user is registered")
-def test_add_list():
-    testapp = app.test_client()
-
-    data = {
-        'listname':TEST_USERLIST
-    }
-    headers={'X-ACCESS-TOKEN':TEST_TOKEN}
-
-    response = testapp.post('/addList',json=data,  )
