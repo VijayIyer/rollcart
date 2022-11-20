@@ -226,6 +226,7 @@ def getListItems(user, listId:int):
                 itemDict = dict()
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
+                itemDict['quantity'] = item.quantity
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
