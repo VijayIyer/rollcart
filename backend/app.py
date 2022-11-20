@@ -11,7 +11,7 @@ from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, and_
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
@@ -218,15 +218,16 @@ def getListItems(user, listId:int):
     '''
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.list_id == listId).one()
+            userListId = session.query(UserList.user_list_id).filter(UserList.list_id == listId).scalar()
             itemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
-            items = session.query(Item).filter(Item.item_id.in_(itemIds))
+            items = session.query(Item).filter(Item.item_id.in_(itemIds)).all()
             itemResults =[]
             for item in items:
+                userListItem = session.query(UserListItem).filter(and_(UserListItem.user_list_id == userListId, UserListItem.item_id == item.item_id)).scalar()
                 itemDict = dict()
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
-                itemDict['quantity'] = item.quantity
+                itemDict['quantity'] = userListItem.quantity
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
