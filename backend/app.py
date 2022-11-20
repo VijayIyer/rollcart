@@ -218,7 +218,7 @@ def getListItems(user, listId:int):
     '''
     try:
         with Session() as session:
-            userListId = session.query(UserList).filter(UserList.list_id == listId).one()
+            userListId = session.query(UserList.user_list_id).filter(UserList.list_id == listId).one()
             itemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
             items = session.query(Item).filter(Item.item_id.in_(itemIds))
             itemResults =[]
