@@ -104,14 +104,28 @@ def register():
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
-
+            
             newUser = User(user_name = user['username']
                         , password = user['password']
                         , first_name = user['firstname']
-                        , last_name = user['lastname'])
+                        , last_name = user['lastname']) 
+            newFavoriteList = List(list_name='Favorites')
+            newCartList = List(list_name='Cart')
+            
             session.add(newUser)
+            session.add(newFavoriteList)
+            session.add(newCartList)
+            session.flush()
+            newUserFavoriteList = UserList(user_id = newUser.user_id, list_id = newFavoriteList.list_id)
+            newUserCartList = UserList(user_id = newUser.user_id, list_id = newCartList.list_id)
+            session.add(newUserFavoriteList)
+            session.add(newUserCartList)
+            response = {'message':'Registration Successful'
+            , 'favorite_list_id':newFavoriteList.list_id
+            , 'cart_list_id':newCartList.list_id}
+            newUser.favorite_list_id = newFavoriteList.list_id
+            newUser.cart_list_id = newFavoriteList.list_id
             session.commit()
-            response = {'message':'Registration Successful'}
         return make_response(response, 201)
     except Exception as e:
         print(e)
