@@ -221,9 +221,9 @@ def getListItems(user, listId:int):
             userListId = session.query(UserList.user_list_id).filter(UserList.list_id == listId).one()
             itemIds = session.query(UserListItem.item_id).filter(UserListItem.user_list_id == userListId)
             items = session.query(Item).filter(Item.item_id.in_(itemIds))
-            userListItem = session.query(UserListItem).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId))
             itemResults =[]
             for item in items:
+                userListItem = session.query(UserListItem).filter(and_(UserListItem.user_list_id == userListId, UserListItem.item_id == item.item_id))
                 itemDict = dict()
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
@@ -382,7 +382,6 @@ def getPrices(user, listId:int):
             return make_response(results, 200)
     except Exception as e:
         print(e)
-        traceback.print_exc()
         return make_response({'message':'Unable to get prices'}, 400)
 
 
