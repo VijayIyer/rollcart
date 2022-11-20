@@ -458,7 +458,7 @@ def index():
 
 @app.route('/getProducts', methods=['GET'])
 @token_required
-def getProducts():
+def getProducts(user):
     try:
         args = request.args
         items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
