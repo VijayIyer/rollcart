@@ -1,10 +1,12 @@
 
+import pytest
 from Retailers.walgreens.getProductInfo import Walgreens
 
 
 
 TEST_ZIPCODE = "46219"
 TEST_PRODUCT = "milk"
+@pytest.mark.skip(reason="skipping to save api requests")
 
 def test_walgreens_store_endpoint():
     
@@ -17,6 +19,7 @@ def test_walgreens_store_endpoint():
 
     pass
 
+@pytest.mark.skip(reason="skipping to save api requests")
 
 def test_walgreens_product_endpoint():
 
