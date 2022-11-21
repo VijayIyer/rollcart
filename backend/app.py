@@ -293,7 +293,7 @@ def addItem(user, listId:int):
                 session.flush()
                 session.commit()
             else:
-                returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name'])
+                returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
@@ -305,15 +305,15 @@ def addItem(user, listId:int):
                     session.commit()
                 else:
                     userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id)\
-                    .filter(UserListItem.item_id == returnItemId and\
-                         UserList.user_id == user.user_id and\
-                             UserList.list_id == listId).one()
+                    .filter(and_(UserListItem.item_id == returnItemId
+                    , UserList.user_id == user.user_id
+                    , UserList.list_id == listId)).one()
                     userListItem.quantity = body['quantity']
                     session.commit()
 
         return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 200)
     except Exception as e:
-        print(e)
+        print(e.with_traceback(None))
         return make_response('Error adding Item', 400)
 
 
