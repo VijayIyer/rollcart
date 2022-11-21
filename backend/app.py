@@ -237,7 +237,7 @@ def getListItems(user, listId:int):
             items = session.query(Item).filter(Item.item_id.in_(itemIds))
             itemResults =[]
             for item in items:
-                userListItem = session.query(UserListItem).filter(and_(UserListItem.user_list_id == userListId, UserListItem.item_id == item.item_id))
+                userListItem = session.query(UserListItem).filter(and_(UserListItem.user_list_id == userListId, UserListItem.item_id == item.item_id)).scalar()
                 itemDict = dict()
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
