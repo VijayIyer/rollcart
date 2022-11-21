@@ -292,7 +292,7 @@ def addItem(user, listId:int):
                 session.flush()
                 session.commit()
             else:
-                returnItemId = session.query(Item).filter(Item.item_name == body['item_name']).one()
+                returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name'])
                 # check if item exists in same list
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
