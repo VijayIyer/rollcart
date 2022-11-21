@@ -224,6 +224,31 @@ def getLists(user):
         return make_response(e, 400)
 
 
+@app.route('/<int:itemId>/getLists', methods=['GET'])
+@token_required
+def getListsForItem(user, itemId):
+    '''
+    Gets List Names created by user with userid provided in the request
+    '''
+    try:
+        with Session() as session:
+            lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
+            .join(UserListItem, UserListItem.user_list_id == UserList.user_list_id) \
+            .filter(and_(UserList.user_id == user.user_id, UserListItem.item_id == itemId)).all()
+            
+            listResults  = []
+            for list in lists:
+                listDict = dict()
+                listDict['listId'] = list.list_id
+                listDict['listname'] = list.list_name
+                listResults.append(listDict)
+        return make_response(listResults, 200)
+    except Exception as e:
+        print(e)
+        return make_response(e, 400)
+
+
+
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
 def getListItems(user, listId:int):
