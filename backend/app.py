@@ -280,15 +280,16 @@ def addItem(user, listId:int):
         returnItemId = None
         with Session() as session:
             body = request.get_json()
+            userListId = session.query(UserList.user_list_id).\
+                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
+                        first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
                 newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
-                userListId = session.query(UserList.user_list_id).\
-                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
-                        first() # create issue, weird code
+                
                 newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
                 session.add(newUserListItem)
                 session.flush()
