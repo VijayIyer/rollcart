@@ -4,6 +4,7 @@ import requests
 import decimal
 import geopy
 from geopy.distance import geodesic
+import pgeocode
 
 params = config.Config.TARGET_PARAMS
 api_key = params["RAPIDAPI_KEY"]
@@ -15,12 +16,19 @@ geo_locator = geopy.Nominatim(user_agent='1234')
 class Target(Retailer):
 
     def __init__(self) -> None:
+        self.dist = pgeocode.Nominatim("us")
         super().__init__()
 
     def __str__(self):
         return 'Target'
 
     def getNearestStore(self,userLocation,lat,long):
+        if not(lat and long):
+            userData = self.dist.query_postal_code(userLocation)
+            lat = userData.latitude
+            long = userData.longitude
+        # r = geo_locator.reverse((lat, long))
+        # userLocation = r.raw['address']['postcode']
         stores = self.getNearestStores(userLocation,lat,long)
         if len(stores) > 0 and len(stores[0]['locations']) > 0:
 
@@ -57,9 +65,9 @@ class Target(Retailer):
         
 
     def getNearestStores(self,userLocation,lat,long):
+        zipcode = userLocation
         url = "https://target1.p.rapidapi.com/stores/list"
-        r = geo_locator.reverse((lat, long))
-        zipcode = r.raw['address']['postcode']
+        
         querystring = {"zipcode":zipcode}
 
         headers = {

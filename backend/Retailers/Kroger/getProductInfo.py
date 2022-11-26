@@ -7,6 +7,7 @@ import requests
 import urllib.request
 from Retailers import config
 from geopy.distance import geodesic
+import pgeocode
 
 from getProductPrices import Retailer
 
@@ -29,7 +30,6 @@ class Kroger(Retailer):
 
   def __init__(self):
       #Generates access token for API auth.
-
       self.accessresponse = requests.request("POST", BASE_URL, headers=header, data=payload)
       actoken = json.loads(self.accessresponse.text)
       actoken = actoken['access_token']
@@ -38,14 +38,14 @@ class Kroger(Retailer):
       self.__header = {
         'Authorization': "Bearer %s" %(actoken)
         }
+      
+      self.dist = pgeocode.Nominatim("us")
 
         
   def __str__(self):
         return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
-
-
       storeId = self.getNearestStoreId(zipcode,lat,long)
       if storeId == -1:
         return {"Message ":" Kroger store unavailable at given zipcode"}
@@ -96,8 +96,12 @@ class Kroger(Retailer):
     apiurl = STORESEARCHURL
     
     try:
+      # exact_response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
+      # if lat and long:
       # response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       exact_response = requests.get(apiurl,params={'filter.lat.near':float(lat),'filter.lon.near':float(long),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
+  
+        
 
       stores_lat_long = exact_response.json()
 
@@ -106,6 +110,10 @@ class Kroger(Retailer):
       return -1
 
   def getNearestStore(self,zipcode : str,lat,long):
+    if not(lat and long):
+      userData = self.dist.query_postal_code(zipcode)
+      lat = userData.latitude
+      long = userData.longitude
     stores = self.getNearestStores(zipcode,lat,long)
     if len(stores) > 0:
       nearestStore = stores[0]

@@ -374,9 +374,7 @@ def getPrices(user, listId:int):
             lat = request.args.get('lat')
             long = request.args.get('long')
             userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
-            print(userListId)
             userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
-            # print(userListItems)
             results = []
             for retailer in retailers:
                 storeId = retailer.getNearestStoreId(zip,lat,long)
