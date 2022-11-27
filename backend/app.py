@@ -224,6 +224,31 @@ def getLists(user):
         return make_response(e, 400)
 
 
+@app.route('/<int:itemId>/getLists', methods=['GET'])
+@token_required
+def getListsForItem(user, itemId):
+    '''
+    Gets List Names created by user with userid provided in the request
+    '''
+    try:
+        with Session() as session:
+            lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
+            .join(UserListItem, UserListItem.user_list_id == UserList.user_list_id) \
+            .filter(and_(UserList.user_id == user.user_id, UserListItem.item_id == itemId)).all()
+            
+            listResults  = []
+            for list in lists:
+                listDict = dict()
+                listDict['listId'] = list.list_id
+                listDict['listname'] = list.list_name
+                listResults.append(listDict)
+        return make_response(listResults, 200)
+    except Exception as e:
+        print(e)
+        return make_response(e, 400)
+
+
+
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
 def getListItems(user, listId:int):
@@ -278,21 +303,22 @@ def addItem(user, listId:int):
         returnItemId = None
         with Session() as session:
             body = request.get_json()
+            userListId = session.query(UserList.user_list_id).\
+                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
+                        first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
                 newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
-                userListId = session.query(UserList.user_list_id).\
-                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
-                        first() # create issue, weird code
+                
                 newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
                 session.add(newUserListItem)
                 session.flush()
                 session.commit()
             else:
-                returnItemId = session.query(Item).filter(Item.item_name == body['item_name']).one()
+                returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
@@ -304,15 +330,15 @@ def addItem(user, listId:int):
                     session.commit()
                 else:
                     userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id)\
-                    .filter(UserListItem.item_id == returnItemId and\
-                         UserList.user_id == user.user_id and\
-                             UserList.list_id == listId).one()
+                    .filter(and_(UserListItem.item_id == returnItemId
+                    , UserList.user_id == user.user_id
+                    , UserList.list_id == listId)).one()
                     userListItem.quantity = body['quantity']
                     session.commit()
 
         return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 200)
     except Exception as e:
-        print(e)
+        print(e.with_traceback(None))
         return make_response('Error adding Item', 400)
 
 
