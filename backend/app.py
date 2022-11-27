@@ -354,7 +354,9 @@ def removeList(user, listId:int):
     '''
     try:
         with Session() as session:
-            list = session.query(List).filter(List.list_id==listId).one()
+            list = session.query(List).join(UserList, UserList.list_id == List.list_id)\
+                .join(User, User.user_id == UserList.user_id)\
+                .filter(and_(User.user_id == user.user_id, UserList.list_id==listId)).one()
             session.delete(list)
             session.commit()
         return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
