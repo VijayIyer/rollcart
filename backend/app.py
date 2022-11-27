@@ -340,7 +340,7 @@ def addItem(user, listId:int):
                     userListItem.quantity = body['quantity']
                     session.commit()
 
-        return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 200)
+        return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 201)
     except Exception as e:
         print(e.with_traceback(None))
         return make_response('Error adding Item', 400)
