@@ -348,7 +348,6 @@ def removeList(user, listId:int):
     '''
     remove list specified by listid parameter
     '''
-    print("List id is",listId)
     try:
         with Session() as session:
             list = session.query(List).filter(List.list_id==listId).one()
