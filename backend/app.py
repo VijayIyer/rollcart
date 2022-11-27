@@ -124,7 +124,7 @@ def register():
             , 'favorite_list_id':newFavoriteList.list_id
             , 'cart_list_id':newCartList.list_id}
             newUser.favorite_list_id = newFavoriteList.list_id
-            newUser.cart_list_id = newFavoriteList.list_id
+            newUser.cart_list_id = newCartList.list_id
             session.commit()
         return make_response(response, 201)
     except Exception as e:
