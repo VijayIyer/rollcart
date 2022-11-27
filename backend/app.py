@@ -86,7 +86,8 @@ def login():
                 return make_response({'message':'No such user in database'}, 409)
             if existingUser.password == auth.password:
                 token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
-                return jsonify({'message':'login successful', 'token':token}), 201
+                return jsonify({'message':'login successful', 'token':token, 'favorite_list_id':existingUser.favorite_list_id, 'cart_list_id':existingUser.cart_list_id
+                                }), 201                
             else:
                 return make_response({'message':'Invalid Credentials'}, 403)
     except Exception as e:
