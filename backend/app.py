@@ -350,7 +350,7 @@ def removeList(user, listId:int):
     '''
     try:
         with Session() as session:
-            list = session.query(List).filter(List.list_id==listId)
+            list = session.query(List).filter(List.list_id==listId).one()
             session.delete(list)
             session.commit()
         return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
@@ -474,21 +474,6 @@ def removeItem(user, listId, itemId):
         print(e)
         return make_response('unable to remove item from list', 500)
 
-
-@app.route('/<int:listId>', methods=['DELETE'])
-@token_required
-def removeItem(user, listId):
-    try:
-        with Session() as session:
-            list = session.query(List).filter(List.list_id == listId).one()
-            session.delete(list)
-            session.flush()
-            session.commit()
-        return make_response({'message': 'List {} deleted successfully'\
-            .format(list.list_id)}, 200)
-    except Exception as e:
-        print(e)
-        return make_response('Unable to Delete List', 500)
 
 
 @app.route('/intro')
