@@ -209,7 +209,8 @@ def getLists(user):
             # checking user exists
             if session.query(User).filter(User.user_id == user.user_id).count() == 0:
                 return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
-            listIds = session.query(UserList.list_id).filter(UserList.user_id == user.user_id)
+            listIds = session.query(UserList.list_id).join(User, User.user_id == UserList.user_id).\
+            filter(and_(UserList.user_id == user.user_id, UserList.list_id != User.favorite_list_id,  UserList.list_id != User.cart_list_id))
             lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
             .filter(List.list_id.in_(listIds))
             listResults  = []
