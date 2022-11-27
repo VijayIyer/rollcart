@@ -1,11 +1,13 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import { failedToast, successfulToast } from '../../utils/util';
 import './manageLists.css';
 
 export const ManageLists = ({ showListModal, setShowListModal, userLists, setUserLists }: any) => {
   const [newListName, setNewListName] = useState('');
+  const navigate = useNavigate();
 
   const getCurrentLists = () => {
     axios.get('getLists').then(response => {
@@ -24,10 +26,16 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
         listname: newListName,
       })
       .then(response => {
+        const { data } = response;
         if (response.status === 201) {
           successfulToast(newListName + ' added to the list!');
         }
-        setUserLists(userLists.concat(newListName));
+        setUserLists(
+          userLists.concat({
+            listId: data.listId,
+            listName: newListName,
+          }),
+        );
       })
       .catch(error => {
         failedToast(newListName + ' was not added to the list, please try again!');
@@ -47,11 +55,20 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
       <div className="userlistdetails">
         {userLists.map((item: any) => {
           return (
-            <div key={item.listId} className={`userlistItem`}>
-              <div className="userlistName">{item.listname}</div>
-              <div className="closePopup1 red">
-                <i className="fa-solid fa-xmark fa-xl closePopupButton"></i>
+            <div className="userlistItemContainer">
+              <div key={item.listId} className={`userlistItem`}>
+                <div className="closePopup1 red">
+                  <i className="fa-solid fa-xmark fa-xl closePopupButton"></i>
+                </div>
+                <div className="userlistName">{item.listname}</div>
               </div>
+              <button
+                className="button-3 viewItemsButton"
+                onClick={() => {
+                  navigate(`/cartDetails/${item.listId}`);
+                }}>
+                View Items
+              </button>
             </div>
           );
         })}

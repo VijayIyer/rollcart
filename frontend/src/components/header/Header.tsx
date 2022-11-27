@@ -44,18 +44,22 @@ function Header(props: appProps) {
 }
 
 function SearchBar({ setQuery, setItemsToDisplay, zipcode, query, setIsLoading, setProgress }: any) {
-  const handleSearchProductsClicked = async () => {
-    try {
-      setProgress(30);
-      setIsLoading(true);
-      const { data } = await axios.get(`/walmartTest?q=${query}&zipcode=${zipcode}`);
-      setItemsToDisplay({ result: data });
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-      setProgress(100);
-    }
+  const handleSearchProductsClicked = () => {
+    setProgress(30);
+    setIsLoading(true);
+    axios
+      .get(`/getProducts?q=${query}&zipcode=${zipcode}`)
+      .then(response => {
+        const { data } = response;
+        setItemsToDisplay({ result: data });
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setProgress(100);
+      });
   };
 
   const handleChange = (e: any) => {

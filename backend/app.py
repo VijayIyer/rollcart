@@ -18,7 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
 import random
-
+import traceback
 app = Flask(__name__)
 
 # Using a production configuration
@@ -253,8 +253,8 @@ def getListsForItem(user, itemId):
 
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
-@token_required
-def getListItems(user, listId:int):
+# @token_required
+def getListItems(listId:int):
     '''
     Gets items in the list with listid provided in the query
     '''
@@ -273,7 +273,8 @@ def getListItems(user, listId:int):
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
-        print(e)
+        print("error is:",e)
+        traceback.print_exc()
         return make_response('Error retrieving items in list', 401)
 
 
