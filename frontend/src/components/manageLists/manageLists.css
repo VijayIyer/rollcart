@@ -17,16 +17,28 @@
   margin-bottom: 30px;
 }
 
+.userlistItemContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .userlistItem {
   display: flex;
   flex-direction: row;
   align-items: center;
   /* gap: 170px; */
+  width: 150px;
   justify-content: space-between;
   padding: 20px;
   /* border: 1px solid red; */
   box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
   margin: 5px;
+}
+
+.viewItemsButton {
+  height: 35px;
 }
 
 .red {

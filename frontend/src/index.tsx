@@ -8,7 +8,7 @@ import ErrorPage from './routes/errorPage/errorPage';
 import Register from './components/registration/register';
 import SignIn from './components/login/login';
 import AllStorePrices from './components/allstorePrices/allstorePrices';
-import StorePrice from './components/storePrices/storePrice';
+import { CartDetails, ListDetails } from './components/storePrices/storePrice';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
@@ -29,13 +29,18 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
   },
   {
-    path: '/storePrices',
+    path: '/storePrices/:listId',
     element: <AllStorePrices />,
     errorElement: <ErrorPage />,
   },
   {
-    path: '/store/walmart',
-    element: <StorePrice />,
+    path: '/cartDetails',
+    element: <CartDetails />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '/listDetails/:listId',
+    element: <ListDetails />,
     errorElement: <ErrorPage />,
   },
 ]);

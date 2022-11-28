@@ -34,6 +34,8 @@ const SignIn = () => {
           await new Promise(res => setTimeout(res, 1000));
           localStorage.setItem('token', data.token);
           localStorage.setItem('userId', email);
+          localStorage.setItem('favorite_list_id', data.favorite_list_id);
+          localStorage.setItem('cart_list_id', data.cart_list_id);
           navigate('/', { state: { email, token: data.token } });
         }
       })

@@ -9,6 +9,7 @@ from Retailers.Kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
 from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
+from Retailers.MockRetailer.getProductInfo import MockRetailer
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, and_
@@ -17,7 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
 import random
-
+import traceback
 app = Flask(__name__)
 
 # Using a production configuration
@@ -51,8 +52,9 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
-# retailers
+# retailers list
 retailers = [Target(), Walgreens(), Kroger(), Walmart()]
+# retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
     @wraps(f)
