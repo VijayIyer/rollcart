@@ -368,26 +368,26 @@ def getPrices(user, listId:int):
     try:
         with Session() as session:
             zip = request.args.get('zipcode')
+            lat = request.args.get('lat')
+            long = request.args.get('long')
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            # print(userListId)
             userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
-            # print(userListItems)
             results = []
             for retailer in retailers:
                 try:
-                    storeId = retailer.getNearestStoreId(zip)
+                    storeId = retailer.getNearestStoreId(zip,lat,long)
                     prices = dict()
                     prices['store_name'] = str(retailer)
                     prices['total_price'] = 0
                     prices['storeId'] = storeId
-                    prices['distanceInMiles'] = random.randint(0, 20) # needs to be replaced with actual service getting distance
+                    prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
                     prices['allItemsAvailable'] = True
                 
                     
                     for userListItem in userListItems:
                         item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
                         filter(UserListItem.item_id == userListItem.item_id).scalar()
-                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip)
+                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip, lat,long)
                         if len(searchResults) > 0:
                             minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
                             prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
