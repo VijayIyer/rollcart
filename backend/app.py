@@ -271,6 +271,7 @@ def getListItems(user, listId:int):
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
                 itemDict['quantity'] = userListItem.quantity
+                itemDict['itemThumbnail'] = item.item_thumbnail
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
@@ -312,7 +313,7 @@ def addItem(user, listId:int):
                         first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'])
+                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
