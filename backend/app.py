@@ -52,7 +52,7 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
-## retailers list
+# retailers list
 retailers = [Target(), Walgreens(), Kroger(), Walmart()]
 # retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
@@ -255,7 +255,7 @@ def getListsForItem(user, itemId):
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
-def getListItems(listId:int):
+def getListItems(user,listId:int):
     '''
     Gets items in the list with listid provided in the query
     '''
@@ -273,7 +273,7 @@ def getListItems(listId:int):
                 itemDict['quantity'] = userListItem.quantity
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
-    except Exception as e:        
+    except Exception as e:
         print(e)
         return make_response('Error retrieving items in list', 401)
 
