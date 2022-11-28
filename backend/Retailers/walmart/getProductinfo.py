@@ -24,8 +24,11 @@ class Walmart(Retailer):
             "device": device,
             "engine": engine
         } 
+    
+    def getNearestStoreDistance(self,userLocation,lat,long):
+        return 19.8
 
-    def getNearestStoreId(self, userLocation):
+    def getNearestStoreId(self, userLocation,lat,long):
         nearestStoreId = -1
         nearestDistance = float("inf")
         userData = self.dist.query_postal_code(userLocation)
@@ -42,9 +45,9 @@ class Walmart(Retailer):
                     nearestStoreId = storeId
         return nearestStoreId
 
-    def getProductsInNearByStore(self, product, zipcode):
+    def getProductsInNearByStore(self, product, zipcode,lat,long):
         self.params["query"] = product
-        self.params["store_id"] = self.getNearestStoreId(zipcode)
+        self.params["store_id"] = self.getNearestStoreId(zipcode,lat,long)
         out = GoogleSearch(self.params).get_dictionary()
         response = []
         if "organic_results" not in out:

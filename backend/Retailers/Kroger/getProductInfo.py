@@ -6,6 +6,8 @@ import os,base64
 import requests
 import urllib.request
 from Retailers import config
+from geopy.distance import geodesic
+import pgeocode
 
 from getProductPrices import Retailer
 
@@ -28,7 +30,6 @@ class Kroger(Retailer):
 
   def __init__(self):
       #Generates access token for API auth.
-
       self.accessresponse = requests.request("POST", BASE_URL, headers=header, data=payload)
       actoken = json.loads(self.accessresponse.text)
       actoken = actoken['access_token']
@@ -37,15 +38,15 @@ class Kroger(Retailer):
       self.__header = {
         'Authorization': "Bearer %s" %(actoken)
         }
+      
+      self.dist = pgeocode.Nominatim("us")
 
         
   def __str__(self):
         return 'Kroger'
 
-  def getProductsInNearByStore(self, product: str, zipcode: str):
-
-
-      storeId = self.getNearestStoreId(zipcode)
+  def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
+      storeId = self.getNearestStoreId(zipcode,lat,long)
       if storeId == -1:
         return {"Message ":" Kroger store unavailable at given zipcode"}
     
@@ -91,20 +92,57 @@ class Kroger(Retailer):
 
       return []
 
+  def getNearestStores(self,zipcode : str,lat,long):
+    apiurl = STORESEARCHURL
+    
+    try:
+      # exact_response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
+      # if lat and long:
+      # response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
+      exact_response = requests.get(apiurl,params={'filter.lat.near':float(lat),'filter.lon.near':float(long),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
+  
+        
 
+      stores_lat_long = exact_response.json()
 
+      return stores_lat_long['data']
+    except:
+      return -1
 
-  def getNearestStoreId(self, zipcode: str) :
+  def getNearestStore(self,zipcode : str,lat,long):
+    if not(lat and long):
+      userData = self.dist.query_postal_code(zipcode)
+      lat = userData.latitude
+      long = userData.longitude
+    stores = self.getNearestStores(zipcode,lat,long)
+    if len(stores) > 0:
+      nearestStore = stores[0]
+      storeGeolocation = nearestStore['geolocation']
+      nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
 
-      apiurl = STORESEARCHURL
-      
-      response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
-      
-      if response.status_code == 200:
-        responsevalue = response.json()
-        return responsevalue['data'][0]['locationId']
+      for store in stores:
+        store_location = store['geolocation']
+        curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
+        store['curDistance'] = curDistance
+        if curDistance < nearestDistance:
+          nearestStore = store
+          nearestDistance = curDistance
 
-      return  -1
+      return nearestStore
+
+    return -1
+
+  def getNearestStoreId(self,zipcode,lat,long):
+    store = self.getNearestStore(zipcode,lat,long)
+    if store != -1:
+      return store['locationId']
+
+    return -1
+
+  def getNearestStoreDistance(self,zipcode,lat,long):
+    store = self.getNearestStore(zipcode,lat,long)
+    if store != -1:
+      return store['curDistance']
 
 
         

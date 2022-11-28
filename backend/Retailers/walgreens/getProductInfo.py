@@ -70,31 +70,49 @@ class Walgreens(Retailer):
 
     def __str__(self):
         return 'Walgreens'
-        
-    def getNearestStoreId(self, userLocation):
-        nearestStoreId = -1
-        nearestDistance = float("inf")
+
+    def getNearestStores(self,userLat,userLon):
+        storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
+        if storeLocatorResults.success:
+            return storeLocatorResults.data["results"]
+
+        return []
+
+    def getNearestStore(self,userLocation,lat,long):
         userData = self.dist.query_postal_code(userLocation)
         userLat = userData.latitude
         userLon = userData.longitude
-        storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
-        if storeLocatorResults.success:
-            # print("store locator result successful")
-            for store in storeLocatorResults.data["results"]:
-                storeLon = store["longitude"]
-                storeLat = store["latitude"]
-                storeId = store["store"]["storeNumber"]
-                # print(storeLon, storeLat, storeId)
-                curDistance = geodesic(
-                    (storeLat, storeLon), (userLat, userLon)).miles
+        if lat and long:
+            userLat = lat
+            userLon = long
+        stores = self.getNearestStores(userLat,userLon)
+        
+        if len(stores) > 0:
+            nearestStore = stores[0]
+            nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+            for store in stores:
+                curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
+                store['curDistance'] = curDistance
                 if curDistance < nearestDistance:
                     nearestDistance = curDistance
-                    nearestStoreId = storeId
-            return nearestStoreId
-        else:
-            print('unsuccessful store locator request')
-            return nearestStoreId
+                    nearestStore = store
 
+            return nearestStore
+        
+        return -1
+
+    def getNearestStoreId(self,userLocation,lat,long):
+        store = self.getNearestStore(userLocation,lat,long)
+        if store != -1:
+            return store["store"]["storeNumber"]
+
+        return -1
+
+    def getNearestStoreDistance(self,userLocation,lat,long):
+        store = self.getNearestStore(userLocation,lat,long)
+        if store != -1:
+            return store['curDistance']
+        
     def getCorrectPrice(self, priceString: str):
         lowestPrice = float("inf")
         try:
@@ -107,38 +125,42 @@ class Walgreens(Retailer):
             print("no price string found")
         return -1 if lowestPrice == float("inf") else lowestPrice
 
-    def getProductsInNearByStore(self, product, zipcode):
-        storeNumber = self.getNearestStoreId(zipcode)
-        # failed to find nearby store to this zipcode
-        if storeNumber == -1:
-            print("unsuccessful store search request")
-            return []
-        else:
-            resp = getProductSearchResults(url=WALGREENS_PRODUCTSEARCH_ENDPOINT,
-                                           search_term=product,
-                                           store_number=storeNumber)
-            if resp.success:
-                # list in which resulting products will be appended
-                products = []
-
-                # replace with logger
-                # print(len(data["products"]))
-                # print(data["products"])
-                for product in resp.data["products"]:
-                    productInfo = product["productInfo"]
-                    if "storeInv" in productInfo.keys():
-                        if productInfo["storeInv"] == IN_STOCK:
-                            # this is where desired fields can be added
-                            products.append(Item(itemName=productInfo["productName"],
-                                                 itemId=productInfo["upc"],
-                                                 itemPrice=self.getCorrectPrice(
-                                productInfo["priceInfo"]["regularPrice"]),
-                                itemThumbnail="http:" +
-                                productInfo["imageUrl"],
-                                productPageUrl=BASE_URL+productInfo["productURL"])
-                            )
-                return products
-            else:
-                print("request to {} failed".format(
-                    WALGREENS_PRODUCTSEARCH_ENDPOINT))
+    def getProductsInNearByStore(self, product, zipcode,lat,long):
+        try:
+            storeNumber = self.getNearestStoreId(zipcode,lat,long)
+            # failed to find nearby store to this zipcode
+            if storeNumber == -1:
+                print("unsuccessful store search request")
                 return []
+            else:
+                resp = getProductSearchResults(url=WALGREENS_PRODUCTSEARCH_ENDPOINT,
+                                            search_term=product,
+                                            store_number=storeNumber)
+                if resp.success:
+                    # list in which resulting products will be appended
+                    products = []
+
+                    # replace with logger
+                    # print(len(data["products"]))
+                    # print(data["products"])
+                    for product in resp.data["products"]:
+                        productInfo = product["productInfo"]
+                        if "storeInv" in productInfo.keys():
+                            if productInfo["storeInv"] == IN_STOCK:
+                                # this is where desired fields can be added
+                                products.append(Item(itemName=productInfo["productName"],
+                                                    itemId=productInfo["upc"],
+                                                    itemPrice=self.getCorrectPrice(
+                                    productInfo["priceInfo"]["regularPrice"]),
+                                    itemThumbnail="http:" +
+                                    productInfo["imageUrl"],
+                                    productPageUrl=BASE_URL+productInfo["productURL"])
+                                )
+                    return products
+                else:
+                    print("request to {} failed".format(
+                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
+                    return []
+        except Exception as e:
+            print(e)
+            return []
