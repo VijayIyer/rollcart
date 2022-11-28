@@ -496,7 +496,7 @@ def getProducts(user):
         print(len(items))
         return make_response(items, 200)
     except:
-        return make_response({'message:Error retrieving products'}, 400)
+        return make_response({'message':'Error retrieving products'}, 400)
 
 
 @app.route('/walmartTest', methods=['GET'])
