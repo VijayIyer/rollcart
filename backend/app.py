@@ -269,6 +269,7 @@ def getListItems(user, listId:int):
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
                 itemDict['quantity'] = userListItem.quantity
+                itemDict['itemThumbnail'] = item.item_thumbnail
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
