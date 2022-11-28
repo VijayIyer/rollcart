@@ -255,31 +255,6 @@ def getListsForItem(user, itemId):
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
-def getListsForItem(user, itemId):
-    '''
-    Gets List Names created by user with userid provided in the request
-    '''
-    try:
-        with Session() as session:
-            lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
-            .join(UserListItem, UserListItem.user_list_id == UserList.user_list_id) \
-            .filter(and_(UserList.user_id == user.user_id, UserListItem.item_id == itemId)).all()
-            
-            listResults  = []
-            for list in lists:
-                listDict = dict()
-                listDict['listId'] = list.list_id
-                listDict['listname'] = list.list_name
-                listResults.append(listDict)
-        return make_response(listResults, 200)
-    except Exception as e:
-        print(e)
-        return make_response(e, 400)
-
-
-
-@app.route('/getListItems/<int:listId>', methods=['GET'])
-# @token_required
 def getListItems(listId:int):
     '''
     Gets items in the list with listid provided in the query
@@ -298,9 +273,8 @@ def getListItems(listId:int):
                 itemDict['quantity'] = userListItem.quantity
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
-    except Exception as e:
-        print("error is:",e)
-        traceback.print_exc()
+    except Exception as e:        
+        print(e)
         return make_response('Error retrieving items in list', 401)
 
 
