@@ -53,8 +53,8 @@ Price = Base.classes.price
 
 
 ## retailers list
-# retailers = [Target(), Walgreens(), Kroger(), Walmart()]
-retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
+retailers = [Target(), Walgreens(), Kroger(), Walmart()]
+# retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
     @wraps(f)
@@ -89,7 +89,7 @@ def login():
             if existingUser.password == auth.password:
                 token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
                 return jsonify({'message':'login successful', 'token':token, 'favorite_list_id':existingUser.favorite_list_id, 'cart_list_id':existingUser.cart_list_id
-                                }), 201                
+                                }), 201
             else:
                 return make_response({'message':'Invalid Credentials'}, 403)
     except Exception as e:
@@ -211,7 +211,7 @@ def getLists(user):
         with Session() as session:
             # checking user exists
             if session.query(User).filter(User.user_id == user.user_id).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
+                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)            
             listIds = session.query(UserList.list_id).join(User, User.user_id == UserList.user_id).\
             filter(and_(UserList.user_id == user.user_id, UserList.list_id != User.favorite_list_id,  UserList.list_id != User.cart_list_id))
             lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
@@ -270,6 +270,7 @@ def getListItems(listId:int):
                 itemDict = dict()
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
+                itemDict['itemThumbnail'] = item.item_thumbnail
                 itemDict['quantity'] = userListItem.quantity
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
