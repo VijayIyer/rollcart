@@ -9,10 +9,48 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
   const [favorite, setFavorite] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [selectedLists, setSelectedLists] = useState([]);
+  const [itemIdCreated, setItemIdCreated] = useState(-1);
 
   const handleFavouriteItemClicked = () => {
     setFavorite(!favorite);
   };
+
+  useEffect(() => {
+    const cartListId = localStorage.getItem('cart_list_id');
+    if (addToCart === 0 && itemIdCreated !== -1) {
+      axios
+        .delete(`/${cartListId}/${itemIdCreated}`)
+        .then(response => {
+          if (response.status === 200) {
+            console.log(`Item: ${itemName} deleted from the cart: ${cartListId}`);
+          }
+        })
+        .catch(error => {
+          console.log(`Item: ${itemName} was not deleted from the cart: ${cartListId}`);
+        });
+      return;
+    } else if (addToCart !== 0) {
+      axios
+        .post(`/${cartListId}/addItem`, {
+          item_name: itemName,
+          quantity: addToCart,
+        })
+        .then(response => {
+          if (response.status === 201) {
+            console.log(`Item: ${itemName} added to the cart: ${cartListId}`);
+            const itemId = response.data.split(' ')[1];
+            setItemIdCreated(itemId);
+            console.log('Response is', response);
+          }
+        })
+        .catch(error => {
+          console.log(`Item: ${itemName} was not added to the cart: ${cartListId}`);
+        });
+    }
+  }, [addToCart]);
+
+  // const handleAddToCartClicked = () => {};
+
   return (
     <div className="item" id={itemId}>
       <div className="favoriteItem" onClick={handleFavouriteItemClicked}>
@@ -22,16 +60,31 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
       <p className="itemName">{itemName}</p>
       <div className="addItemRow">
         {addToCart === 0 ? (
-          <button className="addItemButton itemThumbnail pointerCursor" onClick={() => setAddToCart(addToCart + 1)}>
+          <button
+            className="addItemButton itemThumbnail pointerCursor"
+            onClick={() => {
+              setAddToCart(addToCart + 1);
+              // handleAddToCartClicked();
+            }}>
             <i className="fa-solid fa-plus"> </i> Add
           </button>
         ) : (
           <div className="dynamicAddItemButton itemThumbnailLeft">
-            <button className="addItemButtonAction pointerCursor" onClick={() => setAddToCart(addToCart - 1)}>
+            <button
+              className="addItemButtonAction pointerCursor"
+              onClick={() => {
+                setAddToCart(addToCart - 1);
+                // handleAddToCartClicked();
+              }}>
               <i className="fa-solid fa-minus"> </i>
             </button>
             <span className="itemCount">{addToCart}</span>
-            <button className="addItemButtonAction pointerCursor" onClick={() => setAddToCart(addToCart + 1)}>
+            <button
+              className="addItemButtonAction pointerCursor"
+              onClick={() => {
+                setAddToCart(addToCart + 1);
+                // handleAddToCartClicked();
+              }}>
               <i className="fa-solid fa-plus"> </i>
             </button>
           </div>
@@ -60,7 +113,7 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
   );
 };
 
-export const DisplayItems = ({ searchTerm, items, userLists, setUserLists }: any) => {
+export const DisplayItems = ({ searchTerm, items, userLists, setUserLists, setCartCount }: any) => {
   const getCurrentLists = () => {
     axios.get('getLists').then(response => {
       const { data } = response;
@@ -96,6 +149,7 @@ export const DisplayItems = ({ searchTerm, items, userLists, setUserLists }: any
                   key={item.itemId}
                   userLists={userLists}
                   setUserLists={setUserLists}
+                  setCartCount={setCartCount}
                 />
               </div>
             );

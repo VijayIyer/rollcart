@@ -9,6 +9,7 @@ from Retailers.Kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
 from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
+from Retailers.MockRetailer.getProductInfo import MockRetailer
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine, and_
@@ -17,7 +18,7 @@ from sqlalchemy.orm import sessionmaker
 from flask.json import jsonify
 from functools import wraps
 import random
-
+import traceback
 app = Flask(__name__)
 
 # Using a production configuration
@@ -51,8 +52,9 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
-# retailers
+# retailers list
 retailers = [Target(), Walgreens(), Kroger(), Walmart()]
+# retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
     @wraps(f)
@@ -269,6 +271,7 @@ def getListItems(user, listId:int):
                 itemDict['itemId'] = item.item_id
                 itemDict['itemName'] = item.item_name
                 itemDict['quantity'] = userListItem.quantity
+                itemDict['itemThumbnail'] = item.item_thumbnail
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
@@ -310,7 +313,7 @@ def addItem(user, listId:int):
                         first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'])
+                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
@@ -352,7 +355,9 @@ def removeList(user, listId:int):
     '''
     try:
         with Session() as session:
-            list = session.query(List).filter(List.list_id==listId).one()
+            list = session.query(List).join(UserList, UserList.list_id == List.list_id)\
+                .join(User, User.user_id == UserList.user_id)\
+                .filter(and_(User.user_id == user.user_id, UserList.list_id==listId)).one()
             session.delete(list)
             session.commit()
         return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
@@ -491,13 +496,14 @@ def index():
 def getProducts(user):
     try:
         args = request.args
-        items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
+        q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
+        items:List[Retailer] = sum([retailer.getProductsInNearByStore(q, zipcode, lat, long) for retailer in retailers], start =[])
         print(len(items))
         items = getUniqueItems(items, k='itemName')
         print(len(items))
         return make_response(items, 200)
     except:
-        return make_response({'message:Error retrieving products'}, 400)
+        return make_response({'message':'Error retrieving products'}, 400)
 
 
 @app.route('/walmartTest', methods=['GET'])

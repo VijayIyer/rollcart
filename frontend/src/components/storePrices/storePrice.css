@@ -1,12 +1,46 @@
-.cartCount {
+.showItemsHeader {
+  margin: 0px 50px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 1000px;
+}
+
+.comparePrices {
+  /* /* width: 100px; */
+  height: 50px;
+  background-color: #f23938;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.comparePricesTitle {
+  font-weight: 700;
+  font-size: small;
+  margin: 1px;
+}
+.comparePricesFooter {
+  margin: 1px;
+  font-size: x-small;
+}
+
+.com .listCount {
   margin: 20px;
 }
 .itemPriceStoreContainer {
-  margin: 20px;
+  margin: 50px;
   /* border: 1px solid red; */
   padding: 20px;
   width: 70%;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.tableTitle {
+  justify-content: space-between;
+  margin-left: 250px;
+  margin-right: 50px;
 }
 
 /* .row-item {
@@ -16,6 +50,7 @@
   flex-direction: row;
   position: relative;
   height: 120px;
+  margin-right: 50px;
 }
 
 .itemNameStore {

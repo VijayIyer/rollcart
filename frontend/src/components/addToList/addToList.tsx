@@ -12,7 +12,7 @@ export const AddToList = ({ showListModal, setShowListModal, userLists, setUserL
       const { listId, listname } = selectedLists[i];
       axios
         .post(`/${listId}/addItem`, {
-          itemName: item.itemName,
+          item_name: item.itemName,
           quantity: 1,
         })
         .then(response => {

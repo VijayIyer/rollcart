@@ -19,9 +19,6 @@ interface appProps {
 }
 
 function Header(props: appProps) {
-  // const [userLists, setUserLists] = useState([]);
-  // const [userLists, setUserLists] = useState([]);
-
   return (
     <div className="header">
       <a href="#/" className="logo">
@@ -44,18 +41,22 @@ function Header(props: appProps) {
 }
 
 function SearchBar({ setQuery, setItemsToDisplay, zipcode, query, setIsLoading, setProgress }: any) {
-  const handleSearchProductsClicked = async () => {
-    try {
-      setProgress(30);
-      setIsLoading(true);
-      const { data } = await axios.get(`/walmartTest?q=${query}&zipcode=${zipcode}`);
-      setItemsToDisplay({ result: data });
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-      setProgress(100);
-    }
+  const handleSearchProductsClicked = () => {
+    setProgress(30);
+    setIsLoading(true);
+    axios
+      .get(`/getProducts?q=${query}&zipcode=${zipcode}`)
+      .then(response => {
+        const { data } = response;
+        setItemsToDisplay({ result: data });
+      })
+      .catch(error => {
+        console.log(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+        setProgress(100);
+      });
   };
 
   const handleChange = (e: any) => {
@@ -154,7 +155,7 @@ function StorePrices() {
 
   return (
     <div className="storePrices">
-      <span className="storePricesButton" onClick={() => navigate('/storePrices')}>
+      <span className="storePricesButton" onClick={() => navigate('/cartDetails')}>
         <span id="storePrices" className="fa-stack fa-2x has-badge" data-count="0">
           <i className="fa fa-circle fa-stack-2x"></i>
           <i className="fa fa-shopping-cart fa-stack-1x"></i>
