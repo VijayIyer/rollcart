@@ -255,7 +255,7 @@ def getListsForItem(user, itemId):
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
 @token_required
-def getListItems(user,listId:int):
+def getListItems(user, listId:int):
     '''
     Gets items in the list with listid provided in the query
     '''
