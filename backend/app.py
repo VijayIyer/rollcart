@@ -104,14 +104,28 @@ def register():
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
-
+            
             newUser = User(user_name = user['username']
                         , password = user['password']
                         , first_name = user['firstname']
-                        , last_name = user['lastname'])
+                        , last_name = user['lastname']) 
+            newFavoriteList = List(list_name='Favorites')
+            newCartList = List(list_name='Cart')
+            
             session.add(newUser)
+            session.add(newFavoriteList)
+            session.add(newCartList)
+            session.flush()
+            newUserFavoriteList = UserList(user_id = newUser.user_id, list_id = newFavoriteList.list_id)
+            newUserCartList = UserList(user_id = newUser.user_id, list_id = newCartList.list_id)
+            session.add(newUserFavoriteList)
+            session.add(newUserCartList)
+            response = {'message':'Registration Successful'
+            , 'favorite_list_id':newFavoriteList.list_id
+            , 'cart_list_id':newCartList.list_id}
+            newUser.favorite_list_id = newFavoriteList.list_id
+            newUser.cart_list_id = newCartList.list_id
             session.commit()
-            response = {'message':'Registration Successful'}
         return make_response(response, 201)
     except Exception as e:
         print(e)
@@ -195,7 +209,8 @@ def getLists(user):
             # checking user exists
             if session.query(User).filter(User.user_id == user.user_id).count() == 0:
                 return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
-            listIds = session.query(UserList.list_id).filter(UserList.user_id == user.user_id)
+            listIds = session.query(UserList.list_id).join(User, User.user_id == UserList.user_id).\
+            filter(and_(UserList.user_id == user.user_id, UserList.list_id != User.favorite_list_id,  UserList.list_id != User.cart_list_id))
             lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
             .filter(List.list_id.in_(listIds))
             listResults  = []
@@ -208,6 +223,31 @@ def getLists(user):
     except Exception as e:
         print(e)
         return make_response(e, 400)
+
+
+@app.route('/<int:itemId>/getLists', methods=['GET'])
+@token_required
+def getListsForItem(user, itemId):
+    '''
+    Gets List Names created by user with userid provided in the request
+    '''
+    try:
+        with Session() as session:
+            lists = session.query(List).join(UserList, UserList.list_id == List.list_id) \
+            .join(UserListItem, UserListItem.user_list_id == UserList.user_list_id) \
+            .filter(and_(UserList.user_id == user.user_id, UserListItem.item_id == itemId)).all()
+            
+            listResults  = []
+            for list in lists:
+                listDict = dict()
+                listDict['listId'] = list.list_id
+                listDict['listname'] = list.list_name
+                listResults.append(listDict)
+        return make_response(listResults, 200)
+    except Exception as e:
+        print(e)
+        return make_response(e, 400)
+
 
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
@@ -263,25 +303,62 @@ def addItem(user, listId:int):
     try:
         returnItemId = None
         with Session() as session:
-            # checking user exists
-            if session.query(User).filter(User.user_id == user.user_id).count() == 0:
-                return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
-            if session.query(List).filter(List.list_id == listId).count() == 0:
-                return make_response({'message':'List with id {} not found'.format(listId)}, 400)
             body = request.get_json()
-            newItem = Item(item_name = body['itemName'])
-            session.add(newItem)
-            session.flush()
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).first() # create issue, weird code
-            newUserListItem = UserListItem(user_list_id = userListId[0], item_id = newItem.item_id, quantity = body['quantity'])
-            session.add(newUserListItem)
-            session.flush()
-            returnItemId = newItem.item_id
+            userListId = session.query(UserList.user_list_id).\
+                    filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
+                        first() # create issue, weird code
+            # check if item exists
+            if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
+                newItem = Item(item_name = body['item_name'])
+                session.add(newItem)
+                session.flush()
+                returnItemId = newItem.item_id
+                
+                newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
+                session.add(newUserListItem)
+                session.flush()
+                session.commit()
+            else:
+                returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
+                # check if item exists in same list
+                if session.query(UserListItem).join(UserList, UserList.user_list_id\
+                     == UserListItem.user_list_id)\
+                    .filter(and_(UserListItem.item_id == returnItemId\
+                         ,UserList.user_id == user.user_id\
+                         ,UserList.list_id == listId)).count() == 0:
+                    newUserListItem = UserListItem(user_list_id = userListId[0], item_id = returnItemId, quantity = body['quantity'])
+                    session.add(newUserListItem)
+                    session.commit()
+                else:
+                    userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id)\
+                    .filter(and_(UserListItem.item_id == returnItemId
+                    , UserList.user_id == user.user_id
+                    , UserList.list_id == listId)).one()
+                    userListItem.quantity = body['quantity']
+                    session.commit()
+
+        return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 200)
+    except Exception as e:
+        print(e.with_traceback(None))
+        return make_response('Error adding Item', 400)
+
+
+@app.route('/<int:listId>', methods=['DELETE'])
+@token_required
+def removeList(user, listId:int):
+    '''
+    remove list specified by listid parameter
+    '''
+    try:
+        with Session() as session:
+            list = session.query(List).filter(List.list_id==listId).one()
+            session.delete(list)
             session.commit()
-        return make_response('Item {} added successfully to {}'.format(returnItemId, listId), 200)
+        return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
     except Exception as e:
         print(e)
-        return make_response('Error adding Item', 400)
+        return make_response('Error Deleting List', 500)
+
 
 
 @app.route('/<int:listId>/getPrices', methods=['GET'])
@@ -293,49 +370,89 @@ def getPrices(user, listId:int):
             zip = request.args.get('zipcode')
             lat = request.args.get('lat')
             long = request.args.get('long')
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).scalar()
+            userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
             userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
             results = []
             for retailer in retailers:
-                storeId = retailer.getNearestStoreId(zip,lat,long)
-                prices = dict()
-                prices['store_name'] = str(retailer)
-                prices['total_price'] = 0
-                prices['storeId'] = storeId
-                prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long)
-                prices['allItemsAvailable'] = True
-                for userListItem in userListItems:
-                    item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
-                    filter(UserListItem.item_id == userListItem.item_id).scalar()
-                    searchResults =  retailer.getProductsInNearByStore(item.item_name, zip,lat,long)
-                    if len(searchResults) > 0:
-                        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-                        prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
-                    else:
-                        prices['allItemsAvailable'] = False
-                results.append(prices)                               
+                try:
+                    storeId = retailer.getNearestStoreId(zip,lat,long)
+                    prices = dict()
+                    prices['store_name'] = str(retailer)
+                    prices['total_price'] = 0
+                    prices['storeId'] = storeId
+                    prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
+                    prices['allItemsAvailable'] = True
+                
+                    
+                    for userListItem in userListItems:
+                        item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                        filter(UserListItem.item_id == userListItem.item_id).scalar()
+                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip, lat,long)
+                        if len(searchResults) > 0:
+                            minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                            prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                            # adding price information to table
+                            storeId = session.query(Store.store_id).filter(Store.store_name == str(retailer))
+                            # print(str(retailer))
+                            # check if price information for item already exists in table
+                            
+                            if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
+                                print('this item\'s price not yet added')
+                                newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
+                                    price=minPriceItem['itemPrice']*userListItem.quantity\
+                                        ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
+                                            ,item_image=minPriceItem['itemThumbnail'])
+                                
+                                session.add(newPrice)
+                            else:
+                                existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
+                                existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
+                                existingPrice.item_url=minPriceItem['productPageUrl']
+                                existingPrice.item_image=minPriceItem['itemThumbnail']
+                            
+                        else:
+                            prices['allItemsAvailable'] = False
+                    session.commit()
+                    results.append(prices)
+                    # adding results to database tables
+                except Exception as e:
+                    
+                    print('retailer {} did not return any items:{}'.format(str(retailer), e))
+                    continue
+
             return make_response(results, 200)
     except Exception as e:
         print(e)
         return make_response({'message':'Unable to get prices'}, 400)
 
 
-@app.route('/<int:listId>/<int:storeId>/getPrices', methods=['GET'])
+@app.route('/<int:listId>/<string:storeName>/getPrices', methods=['GET'])
 @token_required
-def getStorePrices(user, listId:int, storeId:int):
+def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
-            userListId = session.query(UserList.user_list_id).filter(UserList.user_id == user.user_id and UserList.list_id == listId).one()
-            itemIds = session.query(Item.item_id).filter(Item.user_list_id == userListId)
-            itemStorePrices = session.query(Price).join(Item, Item.user_list_item_id == Price.user_list_item_id) \
-            .filter(Price.item_id.in_(itemIds) and Price.store_id == storeId)
+            storeId = session.query(Store.store_id).filter(Store.store_name == storeName)
+            
+            userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
+            # print(userListId)
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
+            # print(list(userListItemIds))
+            itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
+            .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
+            
+            # print(itemStorePrices)
             results = []
             for price in itemStorePrices:
-                ItemStorePrice = dict()
-                ItemStorePrice['itemName'] = price.item_name
-                ItemStorePrice['storeId'] = price.store_id
-                ItemStorePrice['totalPrice'] = price.rec_product_price
-                results.append(ItemStorePrice)
+                itemStorePrice = dict()
+                itemName = session.query(Item.item_name).join(UserListItem, Item.item_id == UserListItem.item_id)\
+                    .filter(UserListItem.user_list_item_id == price.user_list_item_id).scalar()
+                # print(itemName)
+                itemStorePrice['itemName'] = itemName
+                itemStorePrice['storeId'] = price.store_id
+                itemStorePrice['totalPrice'] = price.price
+                itemStorePrice['item_image'] = price.item_image
+                itemStorePrice['item_url'] = price.item_url
+                results.append(itemStorePrice)
         return make_response(results, 200)
     except Exception as e:
         print(e)
@@ -347,17 +464,18 @@ def getStorePrices(user, listId:int, storeId:int):
 def removeItem(user, listId, itemId):
     try:
         with Session() as session:
-            item = session.query(Item).filter(Item.item_id == itemId).one()
-            # listItems = session.query(List).filter(List.user_id == userId and List.list_id == listId and List.item_id == itemId).all()
-            # for listItem in listItems:
-            #     session.delete(listItem)
-            session.delete(item)
+            userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id).\
+                filter(UserListItem.item_id==itemId)\
+                .one()
+            session.delete(userListItem)
             session.commit()
         return make_response({'message': 'Item {} deleted successfully'\
-            .format(item.item_id)}, 200)
+            .format(userListItem.item_id)}, 200)
     except Exception as e:
         print(e)
         return make_response('unable to remove item from list', 500)
+
+
 
 @app.route('/intro')
 def index():
@@ -368,7 +486,8 @@ def index():
 
 
 @app.route('/getProducts', methods=['GET'])
-def getProducts():
+@token_required
+def getProducts(user):
     try:
         args = request.args
         items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
