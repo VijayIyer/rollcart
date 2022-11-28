@@ -491,7 +491,8 @@ def index():
 def getProducts(user):
     try:
         args = request.args
-        items:List[Retailer] = sum([retailer.getProductsInNearByStore(args['q'], args['zipcode']) for retailer in retailers], start =[])
+        q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
+        items:List[Retailer] = sum([retailer.getProductsInNearByStore(q, zipcode, lat, long) for retailer in retailers], start =[])
         print(len(items))
         items = getUniqueItems(items, k='itemName')
         print(len(items))
