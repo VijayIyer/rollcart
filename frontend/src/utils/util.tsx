@@ -11,4 +11,6 @@ export const failedToast = (message: string) => {
 export const clearBrowserLocalStorage = () => {
   localStorage.removeItem('userId');
   localStorage.removeItem('token');
+  localStorage.removeItem('favorite_list_id');
+  localStorage.removeItem('cart_list_id');
 };

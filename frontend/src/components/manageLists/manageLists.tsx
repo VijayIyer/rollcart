@@ -29,11 +29,12 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
         const { data } = response;
         if (response.status === 201) {
           successfulToast(newListName + ' added to the list!');
+          setNewListName('');
         }
         setUserLists(
           userLists.concat({
             listId: data.listId,
-            listName: newListName,
+            listname: newListName,
           }),
         );
       })
@@ -65,7 +66,7 @@ export const ManageLists = ({ showListModal, setShowListModal, userLists, setUse
               <button
                 className="button-3 viewItemsButton"
                 onClick={() => {
-                  navigate(`/cartDetails/${item.listId}`);
+                  navigate(`/listDetails/${item.listId}`, { state: { listName: item.listname } });
                 }}>
                 View Items
               </button>

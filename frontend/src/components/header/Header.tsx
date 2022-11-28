@@ -19,9 +19,6 @@ interface appProps {
 }
 
 function Header(props: appProps) {
-  // const [userLists, setUserLists] = useState([]);
-  // const [userLists, setUserLists] = useState([]);
-
   return (
     <div className="header">
       <a href="#/" className="logo">
@@ -158,7 +155,7 @@ function StorePrices() {
 
   return (
     <div className="storePrices">
-      <span className="storePricesButton" onClick={() => navigate('/storePrices')}>
+      <span className="storePricesButton" onClick={() => navigate('/cartDetails')}>
         <span id="storePrices" className="fa-stack fa-2x has-badge" data-count="0">
           <i className="fa fa-circle fa-stack-2x"></i>
           <i className="fa fa-shopping-cart fa-stack-1x"></i>

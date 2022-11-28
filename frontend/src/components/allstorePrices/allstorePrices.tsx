@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { setAuthToken } from '../../auth/auth';
 import { LogoHeader } from '../header/Header';
 import './allstorePrices.css';
 
@@ -15,11 +16,15 @@ function capitalize(word: string) {
 
 const AllStorePrices = () => {
   const navigate = useNavigate();
+  const { listId } = useParams();
+  const location = useLocation();
+  const { listName } = location.state;
   const [prices, setPrices] = useState([]);
 
   useEffect(() => {
+    setAuthToken(localStorage.getItem('token'));
     async function fetchData() {
-      const { data } = await axios.get('/getPrices/3');
+      const { data } = await axios.get(`/${listId}/getPrices?zipcode={47408}`);
       setPrices(data);
     }
     fetchData();
@@ -30,7 +35,7 @@ const AllStorePrices = () => {
       <LogoHeader />
       <div className="allstorePricesContainer">
         <div className="listName">
-          <span>List Name goes here</span>
+          <span>{listName}</span>
         </div>
         <div className="listCreatedDate">
           <span>Nov, 3, 2022</span>
