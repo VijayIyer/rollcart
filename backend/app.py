@@ -404,7 +404,7 @@ def getPrices(user, listId:int):
                                 # check if price information for item already exists in table
                                 
                                 if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
-                                    print('this item\'s price not yet added')
+                                    # print('this item\'s price not yet added')
                                     newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
                                         price=minPriceItem['itemPrice']*userListItem.quantity\
                                             ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
