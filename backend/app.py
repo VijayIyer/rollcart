@@ -498,10 +498,25 @@ def getProducts(user):
         args = request.args
         q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
         items:List[Retailer] = sum([retailer.getProductsInNearByStore(q, zipcode, lat, long) for retailer in retailers], start =[])
-        print(len(items))
         items = getUniqueItems(items, k='itemName')
-        print(len(items))
-        return make_response(items, 200)
+        with Session() as session:
+            user_cart_list_id = session.query(UserList.user_list_id)\
+                .filter(UserList.list_id == User.cart_list_id).one() # to check if item is present in this cart
+            
+            result = []
+            for item in items:
+                item_dict = dict()
+                if session.query(UserListItem).join(Item, UserListItem.item_id == Item.item_id)\
+                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item)).count() == 0:
+                    item_dict['item_name'] = item
+                    item_dict['quantity'] = 0
+                else:
+                    user_list_item_quantity = session.query(UserListItem.quantity).join(Item, UserListItem.item_id == Item.item_id)\
+                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item)).scalar()
+                    item_dict['item_name'] = item
+                    item_dict['quantity'] = user_list_item_quantity
+                result.append(item_dict)
+            return make_response(result, 200)
     except:
         return make_response({'message':'Error retrieving products'}, 400)
 
