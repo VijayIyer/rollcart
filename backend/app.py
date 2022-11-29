@@ -296,6 +296,7 @@ def addItem(user, listId:int):
             userListId = session.query(UserList.user_list_id).\
                     filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
                         first() # create issue, weird code
+            print(userListId)
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
                 newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
@@ -310,6 +311,12 @@ def addItem(user, listId:int):
             else:
                 returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
+                print(returnItemId)
+                print(session.query(UserListItem).join(UserList, UserList.user_list_id\
+                     == UserListItem.user_list_id)\
+                    .filter(and_(UserListItem.item_id == returnItemId\
+                         ,UserList.user_id == user.user_id\
+                         ,UserList.list_id == listId)).count())
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
                     .filter(and_(UserListItem.item_id == returnItemId\
