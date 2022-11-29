@@ -46,51 +46,55 @@ class Kroger(Retailer):
         return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
-      storeId = self.getNearestStoreId(zipcode,lat,long)
-      if storeId == -1:
-        return {"Message ":" Kroger store unavailable at given zipcode"}
-    
-      apiurl =   PRODUCTSEARCHURL
-      params = {
-        'filter.term': product,
-        'filter.locationId':storeId,
-        'filter.limit': 3,
-        'filter.fulfillment':'ais'
-      }
-      response = requests.get(apiurl,params=params,headers=self.__header)
+      try:
+        storeId = self.getNearestStoreId(zipcode,lat,long)
+        if storeId == -1:
+          return {"Message ":" Kroger store unavailable at given zipcode"}
+      
+        apiurl =   PRODUCTSEARCHURL
+        params = {
+          'filter.term': product,
+          'filter.locationId':storeId,
+          'filter.limit': 3,
+          'filter.fulfillment':'ais'
+        }
+        response = requests.get(apiurl,params=params,headers=self.__header)
 
-      if response.status_code == 200 :
-        responsevalue = response.json()
+        if response.status_code == 200 :
+          responsevalue = response.json()
 
-        itemsretrived = []
-
-
-        for plist in responsevalue['data']:
+          itemsretrived = []
 
 
-          upc = plist['upc']
-          desc = plist['description']
-          
-          price  = plist['items'][0]['price']['regular']
-          promoprice = plist['items'][0]['price']['promo']
-          minprice = promoprice if (promoprice <= price and promoprice !=0)  else price
+          for plist in responsevalue['data']:
 
 
-          image = plist['images'][0]['sizes'][0]['url']
-          purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
-          item ={
-                      "itemId": upc,
-                      "itemName": desc,
-                      "itemPrice": minprice,
-                      "itemThumbnail":image,
-                      "productPageUrl":purl
+            upc = plist['upc']
+            desc = plist['description']
+            
+            price  = plist['items'][0]['price']['regular']
+            promoprice = plist['items'][0]['price']['promo']
+            minprice = promoprice if (promoprice <= price and promoprice !=0)  else price
 
-          }
 
-          itemsretrived.append(item)
-        return itemsretrived
+            image = plist['images'][0]['sizes'][0]['url']
+            purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
+            item ={
+                        "itemId": upc,
+                        "itemName": desc,
+                        "itemPrice": minprice,
+                        "itemThumbnail":image,
+                        "productPageUrl":purl
 
-      return []
+            }
+
+            itemsretrived.append(item)
+          return itemsretrived
+
+        return []
+      except Exception as e:
+        print(e)
+        return []
 
   def getNearestStores(self,zipcode : str,lat,long):
     apiurl = STORESEARCHURL

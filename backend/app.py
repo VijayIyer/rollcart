@@ -311,9 +311,10 @@ def addItem(user, listId:int):
             userListId = session.query(UserList.user_list_id).\
                     filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
                         first() # create issue, weird code
+            print(userListId)
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
+                newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
@@ -325,6 +326,12 @@ def addItem(user, listId:int):
             else:
                 returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
+                print(returnItemId)
+                print(session.query(UserListItem).join(UserList, UserList.user_list_id\
+                     == UserListItem.user_list_id)\
+                    .filter(and_(UserListItem.item_id == returnItemId\
+                         ,UserList.user_id == user.user_id\
+                         ,UserList.list_id == listId)).count())
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
                     .filter(and_(UserListItem.item_id == returnItemId\
@@ -502,22 +509,21 @@ def getProducts(user):
         with Session() as session:
             user_cart_list_id = session.query(UserList.user_list_id)\
                 .filter(UserList.list_id == User.cart_list_id).one() # to check if item is present in this cart
-            
             result = []
             for item in items:
-                item_dict = dict()
+                
                 if session.query(UserListItem).join(Item, UserListItem.item_id == Item.item_id)\
-                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item)).count() == 0:
-                    item_dict['item_name'] = item
-                    item_dict['quantity'] = 0
+                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item['itemName'])).count() == 0:
+                    
+                    item['quantity'] = 0
                 else:
                     user_list_item_quantity = session.query(UserListItem.quantity).join(Item, UserListItem.item_id == Item.item_id)\
-                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item)).scalar()
-                    item_dict['item_name'] = item
-                    item_dict['quantity'] = user_list_item_quantity
-                result.append(item_dict)
-            return make_response(result, 200)
-    except:
+                    .filter(and_(UserListItem.user_list_id == user_cart_list_id, Item.item_name == item['itemName'])).scalar()
+                    item['quantity'] = user_list_item_quantity
+            
+            return make_response(items, 200)
+    except Exception as e:
+        print(e)
         return make_response({'message':'Error retrieving products'}, 400)
 
 
