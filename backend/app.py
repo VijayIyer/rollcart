@@ -370,7 +370,6 @@ def removeList(user, listId:int):
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
 def getPrices(user, listId:int):
-    
     try:
         with Session() as session:
             zip = request.args.get('zipcode')
@@ -387,37 +386,47 @@ def getPrices(user, listId:int):
                     prices['total_price'] = 0
                     prices['storeId'] = storeId
                     prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
-                    prices['allItemsAvailable'] = True
+                    prices['unavailableItems'] = []
                 
                     
                     for userListItem in userListItems:
                         item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
-                        filter(UserListItem.item_id == userListItem.item_id).scalar()
-                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip, lat,long)
-                        if len(searchResults) > 0:
-                            minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-                            prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
-                            # adding price information to table
-                            storeId = session.query(Store.store_id).filter(Store.store_name == str(retailer))
-                            # print(str(retailer))
-                            # check if price information for item already exists in table
-                            
-                            if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
-                                print('this item\'s price not yet added')
-                                newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
-                                    price=minPriceItem['itemPrice']*userListItem.quantity\
-                                        ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
-                                            ,item_image=minPriceItem['itemThumbnail'])
+                        filter(UserListItem.item_id == userListItem.item_id).one()
+                        # if there is an exception when getting item, add to unavailable list
+                        try:
+                            searchResults =  retailer.getProductsInNearByStore(item.item_name, zip, lat,long)
+                            if len(searchResults) > 0:
+                                minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+                                prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
+                                # adding price information to table
+                                storeId = session.query(Store.store_id).filter(Store.store_name == str(retailer))
+                                # print(str(retailer))
+                                # check if price information for item already exists in table
                                 
-                                session.add(newPrice)
+                                if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
+                                    print('this item\'s price not yet added')
+                                    newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
+                                        price=minPriceItem['itemPrice']*userListItem.quantity\
+                                            ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
+                                                ,item_image=minPriceItem['itemThumbnail'])
+                                    
+                                    session.add(newPrice)
+                                else:
+                                    existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
+                                    existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
+                                    existingPrice.item_url=minPriceItem['productPageUrl']
+                                    existingPrice.item_image=minPriceItem['itemThumbnail']
+                            # if getProducts from retailer returns empty list, add to unavailable items list   
                             else:
-                                existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
-                                existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
-                                existingPrice.item_url=minPriceItem['productPageUrl']
-                                existingPrice.item_image=minPriceItem['itemThumbnail']
-                            
-                        else:
-                            prices['allItemsAvailable'] = False
+                                item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                            filter(UserListItem.item_id == userListItem.item_id).scalar()
+                                prices['unavailableItems'].append(item.item_name)
+                        except Exception as e:
+                            print(e)
+                            item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
+                            filter(UserListItem.item_id == userListItem.item_id).scalar()
+                            prices['unavailableItems'].append(item.item_name)
+
                     session.commit()
                     results.append(prices)
                     # adding results to database tables
