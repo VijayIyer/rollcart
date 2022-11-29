@@ -117,6 +117,7 @@ class Target(Retailer):
                         "productPageUrl": product_matches[i]["item"]["enrichment"]["buy_url"]
                     }
                 )
-        except:
+        except Exception as e:
+            print(e)
             return []
         return result
