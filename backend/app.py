@@ -19,6 +19,8 @@ from flask.json import jsonify
 from functools import wraps
 import random
 import traceback
+import datetime
+
 app = Flask(__name__)
 
 # Using a production configuration
@@ -86,8 +88,8 @@ def login():
             existingUser = session.query(User).filter(User.user_name == auth.username and User.password == auth.password).first()
             if not existingUser:
                 return make_response({'message':'No such user in database'}, 409)
-            if existingUser.password == auth.password:
-                token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
+            if check_password_hash(existingUser.password, auth.password):
+                token = jwt.encode({'user_id':existingUser.user_id, 'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=2)},app.config['SECRET_KEY'])
                 return jsonify({'message':'login successful', 'token':token, 'favorite_list_id':existingUser.favorite_list_id, 'cart_list_id':existingUser.cart_list_id
                                 }), 201                
             else:
@@ -107,9 +109,9 @@ def register():
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
-            
+            hashed_password = generate_password_hash(user['password'], method='sha256')
             newUser = User(user_name = user['username']
-                        , password = user['password']
+                        , password = hashed_password
                         , first_name = user['firstname']
                         , last_name = user['lastname']) 
             newFavoriteList = List(list_name='Favorites')
