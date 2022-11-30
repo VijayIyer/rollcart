@@ -93,7 +93,7 @@ class Target(Retailer):
                 "store_id":storeId,
                 "keyword": product,
                 "offset": "0",
-                "count": "25" #change depending on number of product matches needed
+                "count": "5" #change depending on number of product matches needed
             }
 
             headers = {

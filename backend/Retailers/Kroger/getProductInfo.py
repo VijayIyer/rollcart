@@ -1,13 +1,16 @@
 
-from ast import List
 
 import json
+
 import os,base64
 import requests
-import urllib.request
+
 from Retailers import config
 from geopy.distance import geodesic
 import pgeocode
+
+import requests
+
 
 from getProductPrices import Retailer
 
@@ -48,7 +51,7 @@ class Kroger(Retailer):
   def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
       storeId = self.getNearestStoreId(zipcode,lat,long)
       if storeId == -1:
-        return {"Message ":" Kroger store unavailable at given zipcode"}
+        return []
     
       apiurl =   PRODUCTSEARCHURL
       params = {
@@ -58,7 +61,6 @@ class Kroger(Retailer):
         'filter.fulfillment':'ais'
       }
       response = requests.get(apiurl,params=params,headers=self.__header)
-
       if response.status_code == 200 :
         responsevalue = response.json()
 
