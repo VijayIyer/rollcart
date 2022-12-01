@@ -11,7 +11,7 @@ body {
   background-color: var(--bgcolor);
   display: flex;
   flex-direction: row;
-  height: 100px;
+  height: 75px;
   /* align-items: ; */
   align-items: center;
   gap: 30px;
@@ -28,11 +28,14 @@ a {
 .logoTitle {
   display: inline-block;
   font: Lilita One;
-  font-size: 30px;
+  font-size: 25px;
   font-weight: bolder;
   color: white;
 }
 .fa-cart-shopping {
+  font-size: 1.5em;
+  line-height: .03125em;
+  vertical-align: -0.1875em;
   color: white;
   height: 40px;
 }
@@ -48,8 +51,8 @@ a {
 }
 
 .searchBarInput {
-  width: 500px;
-  line-height: 50px;
+  width: 450px;
+  line-height: 40px;
   background-color: white;
   border-radius: 5px;
   border: none;
@@ -61,7 +64,7 @@ a {
 .searchButton {
   position: relative;
   left: -50px;
-  top: 5px;
+  top: 0px;
   width: 40px;
   border: none;
   height: 50px;
@@ -92,8 +95,8 @@ a {
 }
 
 .actionButton {
-  width: 100px;
-  height: 47px;
+  width: 95px;
+  height: 43px;
   background-color: white;
   color: black;
   border: none;
