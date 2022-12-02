@@ -68,8 +68,8 @@ const ShowItemsInList = ({ listItems, listName, listId }: any) => {
         </h1>
         <button className="comparePrices" onClick={() => navigate(`/storePrices/${listId}`, { state: { listName: listName } })}>
           <div>
-            <p className="comparePricesTitle">Show my Cart</p>
-            <p className="comparePricesFooter"> Compare prices</p>
+            <p className="comparePricesTitle">Shop my {listName} list</p>
+            <p className="comparePricesFooter"> (Compare prices)</p>
           </div>
         </button>
       </div>
@@ -80,7 +80,7 @@ const ShowItemsInList = ({ listItems, listName, listId }: any) => {
         </div>
         {listItems.map((item: storeItem) => (
           <div className="itemPriceBox flex" key={item.itemName.slice(100)}>
-            <img src="https://pics.drugstore.com/prodimg/418563/450.jpg" alt="" width={100} height={100} />
+            <img src={item.itemThumbnail} alt="" width={100} height={100} />
             <div className="itemNameStore tableItem flex w-60">{item.itemName}</div>
             <div className="itemQuantityStore tableItem flex ml-auto">{item.quantity}</div>
           </div>
