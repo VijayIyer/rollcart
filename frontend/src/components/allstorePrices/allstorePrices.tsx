@@ -6,8 +6,9 @@ import { LogoHeader } from '../header/Header';
 import './allstorePrices.css';
 
 interface StorePriceItem {
-  store: string;
-  price: string;
+  store_name: string;
+  total_price: string;
+  distanceInMiles: string;
 }
 
 function capitalize(word: string) {
@@ -20,19 +21,23 @@ const AllStorePrices = () => {
   const location = useLocation();
   const { listName } = location.state;
   const [prices, setPrices] = useState([]);
+  const [cheapestStore, setCheapestStore] = useState(-1);
+  const [nearestStore, setNearestStore] = useState(-1);
 
   useEffect(() => {
     setAuthToken(localStorage.getItem('token'));
-    async function fetchData() {
-      const { data } = await axios.get(`/${listId}/getPrices?zipcode={47408}`);
+    axios.get('/testtt').then(response => {
+      const { data } = response;
       setPrices(data);
-    }
-    fetchData();
+      setCheapestStore(Math.min(...data.map((item: any) => parseInt(item.total_price, 10))));
+      setNearestStore(Math.min(...data.map((item: any) => parseInt(item.distanceInMiles, 10))));
+    });
   }, []);
 
   return (
     <div>
       <LogoHeader />
+      <p className="allstorePriceTitle">Price Comparison</p>
       <div className="allstorePricesContainer">
         <div className="listName">
           <span>{listName}</span>
@@ -42,12 +47,19 @@ const AllStorePrices = () => {
         </div>
         <div className="allstorePricesDiv" onClick={() => navigate('/store/walmart')}>
           {prices.map((ele: StorePriceItem) => (
-            <div className="allstorePricesBox" key={ele.store}>
-              <img className="allstoreImage" src={`./${ele.store}.png`} alt="" width={50} height={50} />
+            <div className="allstorePricesBox" key={ele.store_name}>
+              <img className="allstoreImage" src={`/${ele.store_name.toLowerCase()}.png`} alt="" width={70} height={70} />
               <div className="allstoreDetails">
-                <p className="allstoreName">{capitalize(ele.store)}</p>
-                <p className="allstorePrice">${ele.price}</p>
+                <p className="allstoreName">{capitalize(ele.store_name)}</p>
+                <p className="allstorePrice">
+                  <i className="fa-solid fa-dollar-sign"></i> {parseFloat(ele.total_price).toFixed(2)}
+                </p>
+                <p className="allstoreDistance">
+                  <i className="fa-solid fa-location-dot"></i> {parseFloat(ele.distanceInMiles).toFixed(2)} miles
+                </p>
               </div>
+              {cheapestStore === parseInt(ele.total_price, 10) && <div className="stack-top">Cheapest</div>}
+              {nearestStore === parseInt(ele.distanceInMiles, 10) && <div className="stack-top">Nearest</div>}
             </div>
           ))}
         </div>

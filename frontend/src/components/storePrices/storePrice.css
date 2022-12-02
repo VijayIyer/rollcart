@@ -8,12 +8,18 @@
 
 .comparePrices {
   /* /* width: 100px; */
-  height: 50px;
+  margin-top: 20px;
+  height: 70px;
+  width: 150px;
   background-color: #f23938;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.comparePrices:hover {
+  background-color: #fd4b4b;
 }
 
 .comparePricesTitle {
@@ -23,7 +29,7 @@
 }
 .comparePricesFooter {
   margin: 1px;
-  font-size: x-small;
+  font-size: small;
 }
 
 .com .listCount {
