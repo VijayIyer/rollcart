@@ -3,3 +3,5 @@ omit =
     */site-packages/*
     */distutils/*
     tests/*
+    Retailers/MockRetailer/*
+    mockretailer_test.py
