@@ -522,7 +522,7 @@ def getProducts(user):
 def walmartTestEndPoint():
     args = request.args
     w = Walmart()
-    return w.getProductsInNearByStore(args["q"], args["zipcode"])
+    return w.getProductsInNearByStore(args["q"], args["zipcode"], None, None)
 
 # Only for testing
 
@@ -533,20 +533,20 @@ def walgreensTestEndPoint():
     print(args['q'])
     print(args['zipcode'])
     w = Walgreens()
-    return w.getProductsInNearByStore(args["q"], args["zipcode"])
+    return w.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
 @app.route('/targetTest')
 def targetTestEndPoint():
    args = request.args
    t = Target()
    
-   return t.getProductsInNearByStore(args["q"], args["zipcode"])
+   return t.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
 @app.route('/krogerTest',methods=['GET'])
 def krogerTestEndpoint():
     k = Kroger()
     args = request.args
-    return k.getProductsInNearByStore(args["q"], args["zipcode"])
+    return k.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
     
 # TODO: Need to remove the below endpoint. Only used for mocking frontend.
