@@ -22,7 +22,7 @@ function Header(props: appProps) {
   return (
     <div className="header">
       <a href="#/" className="logo">
-        <i className="fa-solid fa-cart-shopping fa-2xl"></i>
+        <i className="fa-solid fa-cart-shopping"></i>
         <div className="logoTitle">roll</div>
         <div className="logoTitle">cart</div>
       </a>
