@@ -387,8 +387,6 @@ def getPrices(user, listId:int):
                     prices['storeId'] = storeId
                     prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
                     prices['unavailableItems'] = []
-                
-                    
                     for userListItem in userListItems:
                         item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
                         filter(UserListItem.item_id == userListItem.item_id).one()
@@ -403,7 +401,7 @@ def getPrices(user, listId:int):
                                 # print(str(retailer))
                                 # check if price information for item already exists in table
                                 
-                                if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
+                                if session.query(Price).filter(and_(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId)).count() == 0:
                                     # print('this item\'s price not yet added')
                                     newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
                                         price=minPriceItem['itemPrice']*userListItem.quantity\
@@ -420,12 +418,12 @@ def getPrices(user, listId:int):
                             else:
                                 item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
                             filter(UserListItem.item_id == userListItem.item_id).scalar()
-                                prices['unavailableItems'].append(item.item_name)
+                                prices['unavailableItems'].append({'item_name':item.item_name, 'item_thumbnail':item.item_thumbnail})
                         except Exception as e:
                             print(e)
                             item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
                             filter(UserListItem.item_id == userListItem.item_id).scalar()
-                            prices['unavailableItems'].append(item.item_name)
+                            prices['unavailableItems'].append({'item_name':item.item_name, 'item_thumbnail':item.item_thumbnail})
 
                     session.commit()
                     results.append(prices)
@@ -433,7 +431,7 @@ def getPrices(user, listId:int):
                 except Exception as e:
                     
                     print('retailer {} did not return any items:{}'.format(str(retailer), e))
-                    continue
+                    prices['unavailableItems'].append({'item_name':'', 'item_thumbnail':''})
 
             return make_response(results, 200)
     except Exception as e:
