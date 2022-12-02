@@ -1,11 +1,12 @@
 from distutils.log import debug
+from multiprocessing import Pool, get_context, cpu_count
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from Retailers import config
 from flask import Flask, request, make_response
 from Retailers.util import getUniqueItems
-from Retailers.kroger.getProductInfo import Kroger
+from Retailers.Kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
 from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
@@ -502,6 +503,9 @@ def index():
 
 # Only for testing
 
+def getProductsInStore(retailerAndArgs):
+    retailer, q, zipcode, lat, long = retailerAndArgs
+    return retailer.getProductsInNearByStore(q, zipcode)
 
 @app.route('/getProducts', methods=['GET'])
 @token_required
@@ -509,12 +513,14 @@ def getProducts(user):
     try:
         args = request.args
         q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
-        items:List[Retailer] = sum([retailer.getProductsInNearByStore(q, zipcode, lat, long) for retailer in retailers], start =[])
+        with Pool(cpu_count()-1) as p:
+            items:List[Retailer] = sum(p.map(getProductsInStore, [(retailer, q, zipcode, lat, long) for retailer in retailers]), start=[])
         print(len(items))
         items = getUniqueItems(items, k='itemName')
         print(len(items))
         return make_response(items, 200)
-    except:
+    except Exception as e:
+        print(e)
         return make_response({'message':'Error retrieving products'}, 400)
 
 
