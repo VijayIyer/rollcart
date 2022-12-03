@@ -358,7 +358,7 @@ def getMinPriceForItem(retailerWithArgs):
         return {'store_name':str(retailer),'name':name, 'image':image , 'price':0, 'available':False}
     else:
         minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-        return {'store_name':str(retailer),'name':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] ,  'price':minPriceItem['itemPrice']*quantity, 'available':True}
+        return {'store_name':str(retailer),'name':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] , 'productPageUrl':minPriceItem['productPageUrl'],  'price':minPriceItem['itemPrice']*quantity, 'available':True}
 
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
