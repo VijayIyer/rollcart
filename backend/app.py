@@ -384,11 +384,14 @@ def getPrices(user, listId:int):
             
             retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':retailer.getNearestStoreDistance(zip, lat, long)}\
                  for retailer in retailers]
-            
+            storeIds = {str(retailer):session.query(Store.store_id).filter(Store.store_name == str(retailer)).scalar() for retailer in retailers}
             for itemResult in itemResults:
                 retailPriceTotal = [x for x in retailerPriceTotals if x['store_name'] == itemResult['store_name']][0]
                 if itemResult['available']:
                     retailPriceTotal['total_price'] += itemResult['price']
+                    userListItemId = session.query(UserListItem.user_list_item_id)\
+                        .join(Item, Item.item_id == UserListItem.item_id)\
+                        .filter(and_(UserListItem.user_list_id == userListId, Item.item_name == itemResult['name'])).scalar()
                     if session.query(Price).filter(and_(Price.user_list_item_id==userListItemId, Price.store_id == storeIds[retailPriceTotal['store_name']])).count() == 0:
                         newPrice = Price(user_list_item_id=userListItemId\
                                 , price=itemResult['price']\
