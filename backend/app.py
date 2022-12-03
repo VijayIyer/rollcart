@@ -385,13 +385,13 @@ def getPrices(user, listId:int):
             results = []
             for retailer in retailers:
                 try:
-                    storeId = retailer.getNearestStoreId(zip,lat,long)
                     prices = dict()
                     prices['store_name'] = str(retailer)
                     prices['total_price'] = 0
-                    prices['storeId'] = storeId
-                    prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
                     prices['unavailableItems'] = []
+                    prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
+                    storeId = retailer.getNearestStoreId(zip,lat,long)
+                    prices['storeId'] = storeId
                     for userListItem in userListItems:
                         item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
                         filter(UserListItem.item_id == userListItem.item_id).one()
