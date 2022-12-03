@@ -23,7 +23,7 @@ class MockRetailer(Retailer):
     def __str__(self):
         return 'MockStore'
     
-    def getNearestStoreId(self, userLocation):
+    def getNearestStoreId(self, zipcode, lat = None, long = None):
         return self.storeId
     
     
@@ -33,7 +33,7 @@ class MockRetailer(Retailer):
     def getRandomProductPage(self):
         return PRODUCT_PAGES[random.randint(0, len(PRODUCT_PAGES) - 1)]
 
-    def getProductsInNearByStore(self, product: str, zipcode: str) -> List[Item]:
+    def getProductsInNearByStore(self, product: str, zipcode: str, lat= None, long = None) -> List[Item]:
         numProducts = random.randint(3, 10)
         productNumber = random.randint(0, 9999)
         return [Item(itemName=product+str(i),
@@ -42,7 +42,24 @@ class MockRetailer(Retailer):
                         itemThumbnail=self.getRandomImageThumbnail(),
                         productPageUrl=self.getRandomProductPage())
                         for i in range(numProducts)]
-        
+    def getNearestStoreDistance(self,userLocation,lat,long):
+        return random.randint(0, 10)
+
+class UnavailableMockRetailer(Retailer):
+    def __init__(self) -> None:
+        super().__init__()
+        self.storeId = random.randint(1000, 9999)
+
+    def __str__(self):
+        return 'UnavailableStore'
+    
+    def getProductsInNearByStore(self, product: str, zipcode: str, lat= None, long = None) -> List[Item]:
+        return []
+    
+    def getNearestStoreId(self, zipcode, lat = None, long = None):
+        return self.storeId
+    def getNearestStoreDistance(self,userLocation,lat,long):
+        return random.randint(0, 10)
 
 
 if __name__=="__main__":
