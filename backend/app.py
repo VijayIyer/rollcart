@@ -58,7 +58,7 @@ Price = Base.classes.price
 
 
 # retailers list
-retailers = [Walgreens(), Kroger()]
+retailers = [Target(), Walmart(), Walgreens(), Kroger()]
 # retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
@@ -372,15 +372,14 @@ def removeList(user, listId:int):
         return make_response('Error Deleting List', 500)
 
 def getMinPriceForItem(retailerWithArgs):
-    retailer, name, quantity, zip, lat, long = retailerWithArgs
+    retailer, name, image, quantity, zip, lat, long = retailerWithArgs
    
     searchResults = retailer.getProductsInNearByStore(name, zip, lat,long)
     if len(searchResults) == 0:
-        
-        return {'retailer':str(retailer),'name':name, 'price':0, 'available':False}
+        return {'store_name':str(retailer),'name':name, 'image':image , 'price':0, 'available':False}
     else:
         minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-        return {'retailer':str(retailer),'name':minPriceItem['itemName'], 'price':minPriceItem['itemPrice']*quantity, 'available':True}
+        return {'store_name':str(retailer),'name':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] ,  'price':minPriceItem['itemPrice']*quantity, 'available':True}
 
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
@@ -391,16 +390,32 @@ def getPrices(user, listId:int):
             lat = request.args.get('lat')
             long = request.args.get('long')
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            itemsWithQuantity = session.query(Item.item_name, UserListItem.quantity).\
+            itemsWithQuantity = session.query(Item.item_name, Item.item_thumbnail, UserListItem.quantity).\
                 join(UserListItem, Item.item_id == UserListItem.item_id).\
                     filter(UserListItem.user_list_id == userListId).all()
-            retailerWithArgs = sum([[(retailer, item.item_name, item.quantity, zip, lat, long)\
+            retailerWithArgs = sum([[(retailer, item.item_name, item.item_thumbnail, item.quantity, zip, lat, long)\
                 for item in itemsWithQuantity]\
                 for retailer in retailers],\
                 start=[])
+            itemResults = []
+            # this is where the calls are parallelized
+            print(len(retailerWithArgs))
             with Pool(cpu_count() - 1) as p:
-                results = [x for x in p.map(getMinPriceForItem, retailerWithArgs)]
-                return make_response(results, 200)
+                itemResults = [x for x in p.map(getMinPriceForItem, retailerWithArgs)]
+            
+            retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':retailer.getNearestStoreDistance(zip, lat, long)}\
+                 for retailer in retailers]
+            for itemResult in itemResults:
+                retailPriceTotal = [x for x in retailerPriceTotals if x['store_name'] == itemResult['store_name']][0]
+                if itemResult['available']:
+                    retailPriceTotal['total_price'] += itemResult['price']
+                else:
+                    retailPriceTotal['unavailableItems'].append({
+                        'item_name':itemResult['name'],
+                        'item_thumbnail':itemResult['image']
+                    })
+            
+            return make_response(retailerPriceTotals, 200)
     except Exception as e:      
         print(e)  
         return make_response({'message':'Unable to get prices'}, 400)
@@ -466,7 +481,7 @@ def index():
 
 def getProductsInStore(retailerAndArgs):
     retailer, q, zipcode, lat, long = retailerAndArgs
-    return retailer.getProductsInNearByStore(q, zipcode)
+    return retailer.getProductsInNearByStore(q, zipcode, lat, long)
 
 @app.route('/getProducts', methods=['GET'])
 @token_required
