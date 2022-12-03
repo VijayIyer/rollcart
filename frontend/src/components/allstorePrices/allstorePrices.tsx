@@ -55,8 +55,8 @@ const AllStorePrices = () => {
       .then(response => {
         const { data } = response;
         setPrices(data);
-        setCheapestStore(Math.min(...data.map((item: any) => parseInt(item.total_price, 10))));
-        setNearestStore(Math.min(...data.map((item: any) => parseInt(item.distanceInMiles, 10))));
+        setCheapestStore(Math.min(...data.map((item: any) => parseFloat(item.total_price))));
+        setNearestStore(Math.min(...data.map((item: any) => parseFloat(item.distanceInMiles))));
       })
       .finally(() => {
         setIsLoading(false);
@@ -99,13 +99,20 @@ const AllStorePrices = () => {
                     <i className="fa-solid fa-location-dot"></i> {parseFloat(ele.distanceInMiles).toFixed(2)} miles
                   </p>
                   {!ele.unavailableItems || ele.unavailableItems.length === 0 ? (
-                    <p className="allAvailable">All items are available</p>
+                    <p className="allAvailable">
+                      <i className="fa-solid fa-circle-info"> </i> All items are available
+                    </p>
                   ) : (
-                    <p className="unavailableItems">{ele.unavailableItems.length} items are unavailable</p>
+                    <p className="unavailableItems">
+                      <i className="fa-solid fa-circle-info"> </i> {ele.unavailableItems.length}{' '}
+                      {ele.unavailableItems.length === 1 ? ' item is unavailable' : ' items are unavailable'}
+                    </p>
                   )}
                 </div>
-                {cheapestStore === parseInt(ele.total_price, 10) && <div className="stack-top">Cheapest</div>}
-                {nearestStore === parseInt(ele.distanceInMiles, 10) && <div className="stack-top">Nearest</div>}
+                {cheapestStore === parseFloat(ele.total_price) && parseFloat(ele.total_price) > 0 && <div className="stack-top">Cheapest</div>}
+                {nearestStore === parseFloat(ele.distanceInMiles) && ele.distanceInMiles && parseFloat(ele.distanceInMiles) > 0 && (
+                  <div className="stack-top">Nearest</div>
+                )}
                 {ele.unavailableItems && ele?.unavailableItems.length === 0 && <div className="stack-top green">All available</div>}
               </div>
             ))}
