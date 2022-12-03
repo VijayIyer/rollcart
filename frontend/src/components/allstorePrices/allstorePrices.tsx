@@ -55,8 +55,8 @@ const AllStorePrices = () => {
       .then(response => {
         const { data } = response;
         setPrices(data);
-        setCheapestStore(Math.min(...data.map((item: any) => parseInt(item.total_price, 10))));
-        setNearestStore(Math.min(...data.map((item: any) => parseInt(item.distanceInMiles, 10))));
+        setCheapestStore(Math.min(...data.map((item: any) => parseFloat(item.total_price))));
+        setNearestStore(Math.min(...data.map((item: any) => parseFloat(item.distanceInMiles))));
       })
       .finally(() => {
         setIsLoading(false);
@@ -109,8 +109,8 @@ const AllStorePrices = () => {
                     </p>
                   )}
                 </div>
-                {cheapestStore === parseInt(ele.total_price, 10) && parseInt(ele.total_price, 10) > 0 && <div className="stack-top">Cheapest</div>}
-                {nearestStore === parseInt(ele.distanceInMiles, 10) && ele.distanceInMiles && parseInt(ele.distanceInMiles, 10) > 0 && (
+                {cheapestStore === parseFloat(ele.total_price) && parseFloat(ele.total_price) > 0 && <div className="stack-top">Cheapest</div>}
+                {nearestStore === parseFloat(ele.distanceInMiles) && ele.distanceInMiles && parseFloat(ele.distanceInMiles) > 0 && (
                   <div className="stack-top">Nearest</div>
                 )}
                 {ele.unavailableItems && ele?.unavailableItems.length === 0 && <div className="stack-top green">All available</div>}
