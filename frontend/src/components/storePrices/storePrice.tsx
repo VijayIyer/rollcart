@@ -79,7 +79,6 @@ export const ListDetails = () => {
 
 const ShowItemsInList = ({ listItems, listName, listId, isLoading }: any) => {
   const navigate = useNavigate();
-  const [addToCart, setAddToCart] = useState(0);
 
   console.log('isLoading is', isLoading);
   return (
@@ -120,36 +119,7 @@ const ShowItemsInList = ({ listItems, listName, listId, isLoading }: any) => {
                       </TableCell>
 
                       <TableCell sx={{ fontSize: '1rem' }} align="right">
-                        {/* {item.quantity} */}
-                        <div className="addItemRow">
-                          {addToCart === 0 ? (
-                            <button
-                              className="addItemButton itemThumbnail pointerCursor"
-                              onClick={() => {
-                                setAddToCart(addToCart + 1);
-                              }}>
-                              <i className="fa-solid fa-plus"> </i> Add
-                            </button>
-                          ) : (
-                            <div className="dynamicAddItemButton itemThumbnailLeft">
-                              <button
-                                className="addItemButtonAction pointerCursor"
-                                onClick={() => {
-                                  setAddToCart(addToCart - 1);
-                                }}>
-                                <i className="fa-solid fa-minus"> </i>
-                              </button>
-                              <span className="itemCount">{addToCart}</span>
-                              <button
-                                className="addItemButtonAction pointerCursor"
-                                onClick={() => {
-                                  setAddToCart(addToCart + 1);
-                                }}>
-                                <i className="fa-solid fa-plus"> </i>
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        {item.quantity}
                       </TableCell>
                       <TableCell sx={{ fontSize: '1rem' }} align="center">
                         <i className="fa-solid fa-trash"></i>

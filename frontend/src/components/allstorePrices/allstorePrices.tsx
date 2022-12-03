@@ -109,8 +109,10 @@ const AllStorePrices = () => {
                     </p>
                   )}
                 </div>
-                {cheapestStore === parseInt(ele.total_price, 10) && <div className="stack-top">Cheapest</div>}
-                {nearestStore === parseInt(ele.distanceInMiles, 10) && <div className="stack-top">Nearest</div>}
+                {cheapestStore === parseInt(ele.total_price, 10) && parseInt(ele.total_price, 10) > 0 && <div className="stack-top">Cheapest</div>}
+                {nearestStore === parseInt(ele.distanceInMiles, 10) && ele.distanceInMiles && parseInt(ele.distanceInMiles, 10) > 0 && (
+                  <div className="stack-top">Nearest</div>
+                )}
                 {ele.unavailableItems && ele?.unavailableItems.length === 0 && <div className="stack-top green">All available</div>}
               </div>
             ))}
