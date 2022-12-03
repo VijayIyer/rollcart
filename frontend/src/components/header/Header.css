@@ -34,7 +34,7 @@ a {
 }
 .fa-cart-shopping {
   font-size: 1.5em;
-  line-height: .03125em;
+  line-height: 0.03125em;
   vertical-align: -0.1875em;
   color: white;
   height: 40px;
@@ -52,7 +52,7 @@ a {
 
 .searchBarInput {
   width: 450px;
-  line-height: 40px;
+  line-height: 45px;
   background-color: white;
   border-radius: 5px;
   border: none;
@@ -73,6 +73,7 @@ a {
   border-radius: 0 5px 5px 0;
   cursor: pointer;
   font-size: 20px;
+  margin: 2px;
 }
 
 .addressBar {
@@ -145,7 +146,7 @@ a {
   position: absolute;
   align-items: center;
   justify-content: center;
-  top: 5%;
+  top: 3%;
   left: 45%;
   font-size: 30px;
 }
@@ -155,9 +156,10 @@ a {
   position: absolute;
   background-color: white;
   box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
-  right: 170px;
-  top: 77px;
+  right: 280px;
+  top: 63px;
   width: 150px;
+  z-index: 200;
 }
 
 .userOptionRow {

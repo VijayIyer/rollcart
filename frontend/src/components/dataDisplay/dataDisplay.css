@@ -5,7 +5,9 @@
 .item {
   display: block;
   padding: 30px;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); */
+  box-shadow: 0 4px 8px 0 rgba(42, 32, 145, 0.16);
+
   transition: 0.3s;
   margin: 20px;
   height: 70%;

@@ -1,3 +1,14 @@
+.loading-bar {
+  align-items: center;
+  justify-content: center;
+  margin-left: 46%;
+  margin-top: 100px;
+}
+.allstorePricesWaitMessage {
+  margin-left: -15%;
+  font-size: large;
+}
+
 .allstorePriceTitle {
   text-align: center;
   font-size: x-large;
@@ -41,7 +52,7 @@
 
 .allstorePricesBox {
   /* height: 100%; */
-  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  box-shadow: 0px 2px 8px rgba(43, 26, 232, 0.16);
   border-radius: 12px;
   align-items: center;
   display: grid;
@@ -102,4 +113,31 @@
     calc(100% - var(--d)) calc(100% - var(--d)),
     var(--d) calc(100% - var(--d))
   );
+}
+.storeTableHeader {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0px;
+}
+
+.green {
+  background: green;
+}
+
+.bg-green {
+  color: rgb(1, 90, 1);
+}
+.bg-red {
+  color: rgb(147, 3, 3);
+}
+.unavailableItems {
+  color: rgb(147, 3, 3);
+}
+
+.allAvailable {
+  color: rgb(1, 90, 1);
+}
+.table {
+  margin: 50px 100px;
+  font-size: larger;
 }

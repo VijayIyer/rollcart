@@ -14,8 +14,11 @@ interface storeItem {
 
 export const CartDetails = () => {
   const [listItems, setListItems] = useState([]);
+  const location = useLocation();
+  const state = location.state;
   const cart_list_id = localStorage.getItem('cart_list_id');
 
+  console.log('state information is', state);
   useEffect(() => {
     setAuthToken(localStorage.getItem('token'));
     async function fetchData() {
