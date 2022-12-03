@@ -158,27 +158,6 @@ def logout():
 
 
 #  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
-
-def getUsers():
-    '''
-    gets all users in the database
-    '''
-    try:
-        with Session() as session:
-            results = session.query(User).all()
-            users = []
-            for r in results:
-                user = dict()
-                user['name'] = r.user_name
-                user['firstname'] = r.firstname
-                user['lastname'] = r.lastname
-                users.append(user)
-        return make_response(users, 200)
-    except Exception as e:
-        print(e)
-        return make_response('Error getting Users', 400)
-
-
 @app.route('/addList', methods=['POST'])
 @token_required
 def addList(user):
