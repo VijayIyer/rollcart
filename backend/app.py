@@ -405,6 +405,7 @@ def getPrices(user, listId:int):
             
             retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':retailer.getNearestStoreDistance(zip, lat, long)}\
                  for retailer in retailers]
+            
             for itemResult in itemResults:
                 retailPriceTotal = [x for x in retailerPriceTotals if x['store_name'] == itemResult['store_name']][0]
                 if itemResult['available']:
