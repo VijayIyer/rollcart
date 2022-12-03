@@ -388,6 +388,18 @@ def getPrices(user, listId:int):
                 retailPriceTotal = [x for x in retailerPriceTotals if x['store_name'] == itemResult['store_name']][0]
                 if itemResult['available']:
                     retailPriceTotal['total_price'] += itemResult['price']
+                    if session.query(Price).filter(and_(Price.user_list_item_id==userListItemId, Price.store_id == storeIds[retailPriceTotal['store_name']])).count() == 0:
+                        newPrice = Price(user_list_item_id=userListItemId\
+                                , price=itemResult['price']\
+                                , store_id=storeIds[retailPriceTotal['store_name']]\
+                                , item_url=itemResult['productPageUrl']\
+                                , item_image=itemResult['image'])
+                        session.add(newPrice)
+                    else:
+                        existingPrice = session.query(Price).filter(and_(Price.user_list_item_id==userListItemId, Price.store_id == storeIds[retailPriceTotal['store_name']]))
+                        existingPrice.price=itemResult['price']
+                        existingPrice.item_url=itemResult['productPageUrl']
+                        existingPrice.item_image=itemResult['image']
                 else:
                     retailPriceTotal['unavailableItems'].append({
                         'item_name':itemResult['name'],
