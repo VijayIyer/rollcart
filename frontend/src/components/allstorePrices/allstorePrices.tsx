@@ -99,9 +99,14 @@ const AllStorePrices = () => {
                     <i className="fa-solid fa-location-dot"></i> {parseFloat(ele.distanceInMiles).toFixed(2)} miles
                   </p>
                   {!ele.unavailableItems || ele.unavailableItems.length === 0 ? (
-                    <p className="allAvailable">All items are available</p>
+                    <p className="allAvailable">
+                      <i className="fa-solid fa-circle-info"> </i> All items are available
+                    </p>
                   ) : (
-                    <p className="unavailableItems">{ele.unavailableItems.length} items are unavailable</p>
+                    <p className="unavailableItems">
+                      <i className="fa-solid fa-circle-info"> </i> {ele.unavailableItems.length}{' '}
+                      {ele.unavailableItems.length === 1 ? ' item is unavailable' : ' items are unavailable'}
+                    </p>
                   )}
                 </div>
                 {cheapestStore === parseInt(ele.total_price, 10) && <div className="stack-top">Cheapest</div>}
