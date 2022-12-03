@@ -49,50 +49,53 @@ class Kroger(Retailer):
         return 'Kroger'
 
   def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
-      storeId = self.getNearestStoreId(zipcode,lat,long)
-      if storeId == -1:
+      try:
+        storeId = self.getNearestStoreId(zipcode,lat,long)
+        if storeId == -1:
+          return []
+      
+        apiurl =   PRODUCTSEARCHURL
+        params = {
+          'filter.term': product,
+          'filter.locationId':storeId,
+          'filter.limit': 3,
+          'filter.fulfillment':'ais'
+        }
+        response = requests.get(apiurl,params=params,headers=self.__header)
+        if response.status_code == 200 :
+          responsevalue = response.json()
+
+          itemsretrived = []
+
+
+          for plist in responsevalue['data']:
+
+
+            upc = plist['upc']
+            desc = plist['description']
+            
+            price  = plist['items'][0]['price']['regular']
+            promoprice = plist['items'][0]['price']['promo']
+            minprice = promoprice if (promoprice <= price and promoprice !=0)  else price
+
+
+            image = plist['images'][0]['sizes'][0]['url']
+            purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
+            item ={
+                        "itemId": upc,
+                        "itemName": desc,
+                        "itemPrice": minprice,
+                        "itemThumbnail":image,
+                        "productPageUrl":purl
+
+            }
+
+            itemsretrived.append(item)
+          return itemsretrived
         return []
-    
-      apiurl =   PRODUCTSEARCHURL
-      params = {
-        'filter.term': product,
-        'filter.locationId':storeId,
-        'filter.limit': 3,
-        'filter.fulfillment':'ais'
-      }
-      response = requests.get(apiurl,params=params,headers=self.__header)
-      if response.status_code == 200 :
-        responsevalue = response.json()
-
-        itemsretrived = []
-
-
-        for plist in responsevalue['data']:
-
-
-          upc = plist['upc']
-          desc = plist['description']
-          
-          price  = plist['items'][0]['price']['regular']
-          promoprice = plist['items'][0]['price']['promo']
-          minprice = promoprice if (promoprice <= price and promoprice !=0)  else price
-
-
-          image = plist['images'][0]['sizes'][0]['url']
-          purl = "https://www.kroger.com/search?query="+ upc +"&searchType=default_search"
-          item ={
-                      "itemId": upc,
-                      "itemName": desc,
-                      "itemPrice": minprice,
-                      "itemThumbnail":image,
-                      "productPageUrl":purl
-
-          }
-
-          itemsretrived.append(item)
-        return itemsretrived
-
-      return []
+      except Exception as e:
+        print(e)
+        return []
 
   def getNearestStores(self,zipcode : str,lat,long):
     apiurl = STORESEARCHURL
@@ -117,7 +120,7 @@ class Kroger(Retailer):
       lat = userData.latitude
       long = userData.longitude
     stores = self.getNearestStores(zipcode,lat,long)
-    if len(stores) > 0:
+    if stores != -1:
       nearestStore = stores[0]
       storeGeolocation = nearestStore['geolocation']
       nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
