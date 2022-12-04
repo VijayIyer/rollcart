@@ -358,7 +358,7 @@ def getMinPriceForItem(retailerWithArgs):
         return {'store_name':str(retailer),'name':name, 'image':image , 'price':0, 'available':False}
     else:
         minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-        return {'store_name':str(retailer),'name':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] , 'productPageUrl':minPriceItem['productPageUrl'],  'price':minPriceItem['itemPrice']*quantity, 'available':True}
+        return {'store_name':str(retailer),'name':name, 'resultName':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] , 'productPageUrl':minPriceItem['productPageUrl'],  'price':minPriceItem['itemPrice']*quantity, 'available':True}
 
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
@@ -409,7 +409,7 @@ def getPrices(user, listId:int):
                         'item_name':itemResult['name'],
                         'item_thumbnail':itemResult['image']
                     })
-            
+            session.commit()
             return make_response(retailerPriceTotals, 200)
     except Exception as e:      
         print(e)  
@@ -421,22 +421,22 @@ def getPrices(user, listId:int):
 def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
-            storeId = session.query(Store.store_id).filter(Store.store_name == storeName)
-            
+            storeId = session.query(Store.store_id).filter(Store.store_name == storeName).scalar()
+            print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            # print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
-            # print(list(userListItemIds))
+            print(userListId)
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId).all()
+            print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
             
-            # print(itemStorePrices)
+            print(list(itemStorePrices))
             results = []
             for price in itemStorePrices:
                 itemStorePrice = dict()
                 itemName = session.query(Item.item_name).join(UserListItem, Item.item_id == UserListItem.item_id)\
                     .filter(UserListItem.user_list_item_id == price.user_list_item_id).scalar()
-                # print(itemName)
+                print(itemName)
                 itemStorePrice['itemName'] = itemName
                 itemStorePrice['storeId'] = price.store_id
                 itemStorePrice['totalPrice'] = price.price
