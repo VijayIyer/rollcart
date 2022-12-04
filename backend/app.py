@@ -425,7 +425,7 @@ def getStorePrices(user, listId:int, storeName:str):
             print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
             print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId).all()
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
             print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
@@ -455,7 +455,7 @@ def removeItem(user, listId, itemId):
     try:
         with Session() as session:
             userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id).\
-                filter(UserListItem.item_id==itemId)\
+                filter(and_(UserListItem.item_id==itemId,UserList.list_id == listId,UserList.user_id == user.user_id))\
                 .one()
             session.delete(userListItem)
             session.commit()
