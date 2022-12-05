@@ -108,9 +108,10 @@ const AllStorePrices = () => {
                   )}
                 </div>
                 {cheapestStore === parseFloat(ele.total_price) && parseFloat(ele.total_price) > 0 && <div className="stack-top">Cheapest</div>}
-                {nearestStore === parseFloat(ele.distanceInMiles) && ele.distanceInMiles && parseFloat(ele.distanceInMiles) > 0 && (
-                  <div className="stack-top">Nearest</div>
-                )}
+                {parseFloat(ele.total_price) > 0 &&
+                  nearestStore === parseFloat(ele.distanceInMiles) &&
+                  ele.distanceInMiles &&
+                  parseFloat(ele.distanceInMiles) > 0 && <div className="stack-top">Nearest</div>}
                 {ele.unavailableItems && ele?.unavailableItems.length === 0 && <div className="stack-top green">All available</div>}
               </div>
             ))}
