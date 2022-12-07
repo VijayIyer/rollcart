@@ -19,8 +19,8 @@ class Walmart(Retailer):
 
     def __init__(self):
         # self.walmartStoreData = pd.read_csv("Retailers/walmart/walmartStoreData.csv")
-        # self.dict_reader = csv.DictReader(open("Retailers/walmart/walmartStoreData.csv"))
-        self.walmartStoreData = list(dict_reader)
+        self.dict_reader = csv.DictReader(open("Retailers/walmart/walmartStoreData.csv"))
+        self.walmartStoreData = list(self.dict_reader)
         self.dist = pgeocode.Nominatim("us")
         self.params = {
             "api_key": api_key,
@@ -40,43 +40,51 @@ class Walmart(Retailer):
         for store in self.walmartStoreData:
             # storeLon, storeLat, storeId, storeName, storePostalCode = store
             new_store = {
-                "latitude" : store['Y'],
-                "longitude" : store['X'],
+                "storeLat" : store['Y'],
+                "storeLon" : store['X'],
                 "storeId" : store['businessunit_number'],
                 "storeName" : store['businessunit_name'],
                 "storePostalCode" : store['postal_code']
             }
             if zipcode[0:2] == str(new_store['storePostalCode'])[0:2]:
-                curDistance = geodesic((new_store['latitude'], new_store['longitude']), (lat, long)).miles
+                curDistance = geodesic((new_store['storeLat'], new_store['storeLon']), (lat, long)).miles
                 if curDistance < nearestDistance:
                     nearestDistance = curDistance
                     nearestStore = new_store
-                    nearestStore['currDistance'] = nearestDistance
+                    nearestStore['nearestDistance'] = nearestDistance
 
         return nearestStore
 
+    def getNearestStoreId(self, zipcode, lat, long ):
+        store = self.getNearestStore(zipcode,lat,long)
+        if store != -1:
+            return store['storeId']
+
+        return -1
+
+    def getNearestStoreDistance(self,userLocation,lat,long):
+        store = self.getNearestStore(userLocation,lat,long)
+        if store != -1:
+            return store['nearestDistance']
+
+        return -1
+
     def getProductsInNearByStore(self, product, zipcode,lat,long):
-        try:
-            self.params["query"] = product
-            self.params["store_id"] = self.getNearestStore(zipcode,lat,long)['storeId']
-            out = GoogleSearch(self.params).get_dictionary()
-            response = []
-            if "organic_results" not in out:
-                print(out)
-                return response
-            for item in out["organic_results"]:
-                response.append(
-                    {
-                        "itemId": item["us_item_id"],
-                        "itemName": item["title"],
-                        "itemPrice": item["primary_offer"]["offer_price"],
-                        "itemThumbnail":item["thumbnail"],
-                        "productPageUrl":item["product_page_url"]
-                    }
-                )
-            print("Store id using is",self.params["store_id"])
+        self.params["query"] = product
+        self.params["store_id"] = self.getNearestStoreId(zipcode,lat,long)
+        out = GoogleSearch(self.params).get_dictionary()
+        response = []
+        if "organic_results" not in out:
             return response
-        except Exception as e:
-            print(e)
-            return []
+        for item in out["organic_results"]:
+            response.append(
+                {
+                    "itemId": item["us_item_id"],
+                    "itemName": item["title"],
+                    "itemPrice": item["primary_offer"]["offer_price"],
+                    "itemThumbnail":item["thumbnail"],
+                    "productPageUrl":item["product_page_url"]
+                }
+            )
+        return response
 
