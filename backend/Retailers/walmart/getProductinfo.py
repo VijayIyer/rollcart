@@ -19,8 +19,8 @@ class Walmart(Retailer):
 
     def __init__(self):
         # self.walmartStoreData = pd.read_csv("Retailers/walmart/walmartStoreData.csv")
-        # self.dict_reader = csv.DictReader(open("Retailers/walmart/walmartStoreData.csv"))
-        self.walmartStoreData = list(dict_reader)
+        self.dict_reader = csv.DictReader(open("Retailers/walmart/walmartStoreData.csv"))
+        self.walmartStoreData = list(self.dict_reader)
         self.dist = pgeocode.Nominatim("us")
         self.params = {
             "api_key": api_key,
@@ -40,18 +40,18 @@ class Walmart(Retailer):
         for store in self.walmartStoreData:
             # storeLon, storeLat, storeId, storeName, storePostalCode = store
             new_store = {
-                "latitude" : store['Y'],
-                "longitude" : store['X'],
+                "storeLat" : store['Y'],
+                "storeLon" : store['X'],
                 "storeId" : store['businessunit_number'],
                 "storeName" : store['businessunit_name'],
                 "storePostalCode" : store['postal_code']
             }
             if zipcode[0:2] == str(new_store['storePostalCode'])[0:2]:
-                curDistance = geodesic((new_store['latitude'], new_store['longitude']), (lat, long)).miles
+                curDistance = geodesic((new_store['storeLat'], new_store['storeLon']), (lat, long)).miles
                 if curDistance < nearestDistance:
                     nearestDistance = curDistance
                     nearestStore = new_store
-                    nearestStore['currDistance'] = nearestDistance
+                    nearestStore['nearestDistance'] = nearestDistance
 
         return nearestStore
 
