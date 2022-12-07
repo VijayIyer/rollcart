@@ -147,9 +147,6 @@ class Kroger(Retailer):
     return -1
 
 
-    return -1
-
-
         
 
 
