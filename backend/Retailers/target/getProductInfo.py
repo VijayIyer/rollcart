@@ -32,10 +32,17 @@ class Target(Retailer):
             # userLocation = r.raw['address']['postcode']
             stores = self.getNearestStores(userLocation,lat,long)
             if len(stores) > 0 and len(stores[0]['locations']) > 0:
-
-                nearestStore = stores[0]["locations"][0]
-                nearestStore_geographic = nearestStore['geographic_specifications']
-                nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
+                nearestStore = {
+                    "storeName" : "",
+                    "storeId" : "",
+                    "currDistance" : "",
+                    "Latitude" : "",
+                    "Longitude" : ""
+                }
+                # nearestStore = stores[0]["locations"][0]
+                # nearestStore_geographic = nearestStore['geographic_specifications']
+                # nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
+                nearestDistance = float("inf")
 
                 for store in stores[0]['locations']:
                     geographic = store['geographic_specifications']
@@ -43,27 +50,20 @@ class Target(Retailer):
                     store['curDistance'] = curDistance
                     if curDistance < nearestDistance:
                         nearestDistance = curDistance
-                        nearestStore = store
+                        nearestStore = {
+                            "storeName" : "",
+                            "storeId" : store['location_id'],
+                            "currDistance" : nearestDistance,
+                            "latitude" : geographic['latitude'],
+                            "longitude" : geographic['longitude']
+                        }
 
 
                 return nearestStore
         except Exception as e:
             print(e)
             return -1
-
-    def getNearestStoreId(self, userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store == -1:
-            return -1
-
-        return store["location_id"]
-
-    def getNearestStoreDistance(self,userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store == -1:
-            return -1
-
-        return store['curDistance']
+    
         
 
     def getNearestStores(self,userLocation,lat,long):
@@ -89,7 +89,7 @@ class Target(Retailer):
         try:
             url = "https://target-com-shopping-api.p.rapidapi.com/product_search"
             # get store ID based on user-zipcode
-            storeId = self.getNearestStoreId(zipcode,lat,long)
+            storeId = self.getNearestStore(zipcode,lat,long)['storeId']
 
             querystring = {
                 "store_id":storeId,
