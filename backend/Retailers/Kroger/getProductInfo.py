@@ -102,11 +102,7 @@ class Kroger(Retailer):
       # if lat and long:
       # response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       exact_response = requests.get(apiurl,params={'filter.lat.near':float(lat),'filter.lon.near':float(long),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
-  
-        
-
       stores_lat_long = exact_response.json()
-
       return stores_lat_long['data']
     except:
       return -1
@@ -145,6 +141,8 @@ class Kroger(Retailer):
     store = self.getNearestStore(zipcode,lat,long)
     if store != -1:
       return store['curDistance']
+
+    return -1
 
 
         
