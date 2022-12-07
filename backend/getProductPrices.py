@@ -10,9 +10,9 @@ class Item(TypedDict):
     
 
 class Retailer(ABC):
-    @abstractmethod
-    def getNearestStoreId(self, zipcode: str) -> str:
-        pass
+    # @abstractmethod
+    # def getNearestStoreId(self, zipcode: str) -> str:
+    #     pass
 
     @abstractmethod
     def getProductsInNearByStore(self, product: str, zipcode: str) -> List[Item]:

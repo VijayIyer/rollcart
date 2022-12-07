@@ -88,30 +88,31 @@ class Walgreens(Retailer):
         stores = self.getNearestStores(userLat,userLon)
         
         if len(stores) > 0:
-            nearestStore = stores[0]
-            nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+            nearestStore = {
+                    "storeName" : "",
+                    "storeId" : "",
+                    "currDistance" : "",
+                    "Latitude" : "",
+                    "Longitude" : ""
+                }
+            # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+            nearestDistance = float("inf")
             for store in stores:
                 curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
                 store['curDistance'] = curDistance
                 if curDistance < nearestDistance:
                     nearestDistance = curDistance
-                    nearestStore = store
+                    nearestStore = {
+                            "storeName" : "",
+                            "storeId" : store["store"]["storeNumber"],
+                            "currDistance" : nearestDistance,
+                            "latitude" : store['latitude'],
+                            "longitude" : store['longitude']
+                        }
 
             return nearestStore
         
         return -1
-
-    def getNearestStoreId(self,userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store != -1:
-            return store["store"]["storeNumber"]
-
-        return -1
-
-    def getNearestStoreDistance(self,userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store != -1:
-            return store['curDistance']
         
     def getCorrectPrice(self, priceString: str):
         lowestPrice = float("inf")
@@ -127,7 +128,7 @@ class Walgreens(Retailer):
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
         try:
-            storeNumber = self.getNearestStoreId(zipcode,lat,long)
+            storeNumber = self.getNearestStore(zipcode,lat,long)['storeId']
             # failed to find nearby store to this zipcode
             if storeNumber == -1:
                 print("unsuccessful store search request")
