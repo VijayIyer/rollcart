@@ -1,4 +1,5 @@
 from distutils.log import debug
+from multiprocessing import Pool, get_context, cpu_count
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -19,6 +20,8 @@ from flask.json import jsonify
 from functools import wraps
 import random
 import traceback
+import datetime
+
 app = Flask(__name__)
 
 # Using a production configuration
@@ -55,7 +58,7 @@ Price = Base.classes.price
 
 
 # retailers list
-retailers = [Target(), Walgreens(), Kroger(), Walmart()]
+retailers = [Target(), Walmart(), Walgreens(), Kroger()]
 # retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
@@ -88,8 +91,8 @@ def login():
             existingUser = session.query(User).filter(User.user_name == auth.username and User.password == auth.password).first()
             if not existingUser:
                 return make_response({'message':'No such user in database'}, 409)
-            if existingUser.password == auth.password:
-                token = jwt.encode({'user_id':existingUser.user_id}, app.config['SECRET_KEY'])
+            if check_password_hash(existingUser.password, auth.password):
+                token = jwt.encode({'user_id':existingUser.user_id, 'exp':datetime.datetime.utcnow()+datetime.timedelta(hours=2)},app.config['SECRET_KEY'])
                 return jsonify({'message':'login successful', 'token':token, 'favorite_list_id':existingUser.favorite_list_id, 'cart_list_id':existingUser.cart_list_id
                                 }), 201                
             else:
@@ -109,9 +112,9 @@ def register():
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
-            
+            hashed_password = generate_password_hash(user['password'], method='sha256')
             newUser = User(user_name = user['username']
-                        , password = user['password']
+                        , password = hashed_password
                         , first_name = user['firstname']
                         , last_name = user['lastname']) 
             newFavoriteList = List(list_name='Favorites')
@@ -155,27 +158,6 @@ def logout():
 
 
 #  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
-
-def getUsers():
-    '''
-    gets all users in the database
-    '''
-    try:
-        with Session() as session:
-            results = session.query(User).all()
-            users = []
-            for r in results:
-                user = dict()
-                user['name'] = r.user_name
-                user['firstname'] = r.firstname
-                user['lastname'] = r.lastname
-                users.append(user)
-        return make_response(users, 200)
-    except Exception as e:
-        print(e)
-        return make_response('Error getting Users', 400)
-
-
 @app.route('/addList', methods=['POST'])
 @token_required
 def addList(user):
@@ -316,7 +298,7 @@ def addItem(user, listId:int):
                         first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
+                newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
@@ -328,6 +310,7 @@ def addItem(user, listId:int):
             else:
                 returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
+                
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
                     .filter(and_(UserListItem.item_id == returnItemId\
@@ -368,70 +351,69 @@ def removeList(user, listId:int):
         print(e)
         return make_response('Error Deleting List', 500)
 
-
+def getMinPriceForItem(retailerWithArgs):
+    retailer, name, image, quantity, zip, lat, long = retailerWithArgs
+   
+    searchResults = retailer.getProductsInNearByStore(name, zip, lat,long)
+    if len(searchResults) == 0:
+        return {'store_name':str(retailer),'name':name, 'image':image , 'price':0, 'available':False}
+    else:
+        minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
+        return {'store_name':str(retailer),'name':name, 'resultName':minPriceItem['itemName'], 'image':minPriceItem['itemThumbnail'] , 'productPageUrl':minPriceItem['productPageUrl'],  'price':minPriceItem['itemPrice']*quantity, 'available':True}
 
 @app.route('/<int:listId>/getPrices', methods=['GET'])
 @token_required
 def getPrices(user, listId:int):
-    
     try:
         with Session() as session:
             zip = request.args.get('zipcode')
             lat = request.args.get('lat')
             long = request.args.get('long')
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            userListItems = session.query(UserListItem).filter(UserListItem.user_list_id == userListId).all()
-            results = []
-            for retailer in retailers:
-                try:
-                    storeId = retailer.getNearestStoreId(zip,lat,long)
-                    prices = dict()
-                    prices['store_name'] = str(retailer)
-                    prices['total_price'] = 0
-                    prices['storeId'] = storeId
-                    prices['distanceInMiles'] = retailer.getNearestStoreDistance(zip,lat,long) # needs to be replaced with actual service getting distance
-                    prices['allItemsAvailable'] = True
-                
-                    
-                    for userListItem in userListItems:
-                        item = session.query(Item).join(UserListItem, Item.item_id == UserListItem.item_id).\
-                        filter(UserListItem.item_id == userListItem.item_id).scalar()
-                        searchResults =  retailer.getProductsInNearByStore(item.item_name, zip, lat,long)
-                        if len(searchResults) > 0:
-                            minPriceItem = min(searchResults, key=lambda x:x['itemPrice'])
-                            prices['total_price'] += minPriceItem['itemPrice']*userListItem.quantity
-                            # adding price information to table
-                            storeId = session.query(Store.store_id).filter(Store.store_name == str(retailer))
-                            # print(str(retailer))
-                            # check if price information for item already exists in table
-                            
-                            if session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id, Price.store_id == storeId).count() == 0:
-                                print('this item\'s price not yet added')
-                                newPrice = Price(user_list_item_id=userListItem.user_list_item_id,\
-                                    price=minPriceItem['itemPrice']*userListItem.quantity\
-                                        ,store_id=storeId, item_url=minPriceItem['productPageUrl']\
-                                            ,item_image=minPriceItem['itemThumbnail'])
-                                
-                                session.add(newPrice)
-                            else:
-                                existingPrice = session.query(Price).filter(Price.user_list_item_id==userListItem.user_list_item_id)
-                                existingPrice.price=minPriceItem['itemPrice']*userListItem.quantity
-                                existingPrice.item_url=minPriceItem['productPageUrl']
-                                existingPrice.item_image=minPriceItem['itemThumbnail']
-                            
-                        else:
-                            prices['allItemsAvailable'] = False
-                    session.commit()
-                    results.append(prices)
-                    # adding results to database tables
-                except Exception as e:
-                    
-                    print('retailer {} did not return any items:{}'.format(str(retailer), e))
-                    continue
-
-            return make_response(results, 200)
-    except Exception as e:
-        print(e)
+            itemsWithQuantity = session.query(Item.item_name, Item.item_thumbnail, UserListItem.quantity).\
+                join(UserListItem, Item.item_id == UserListItem.item_id).\
+                    filter(UserListItem.user_list_id == userListId).all()
+            retailerWithArgs = sum([[(retailer, item.item_name, item.item_thumbnail, item.quantity, zip, lat, long)\
+                for item in itemsWithQuantity]\
+                for retailer in retailers],\
+                start=[])
+            itemResults = []
+            # this is where the calls are parallelized
+            print(len(retailerWithArgs))
+            with Pool(cpu_count() - 1) as p:
+                itemResults = [x for x in p.map(getMinPriceForItem, retailerWithArgs)]
+            
+            retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':retailer.getNearestStoreDistance(zip, lat, long)}\
+                 for retailer in retailers]
+            storeIds = {str(retailer):session.query(Store.store_id).filter(Store.store_name == str(retailer)).scalar() for retailer in retailers}
+            for itemResult in itemResults:
+                retailPriceTotal = [x for x in retailerPriceTotals if x['store_name'] == itemResult['store_name']][0]
+                if itemResult['available']:
+                    retailPriceTotal['total_price'] += itemResult['price']
+                    userListItemId = session.query(UserListItem.user_list_item_id)\
+                        .join(Item, Item.item_id == UserListItem.item_id)\
+                        .filter(and_(UserListItem.user_list_id == userListId, Item.item_name == itemResult['name'])).scalar()
+                    if session.query(Price).filter(and_(Price.user_list_item_id==userListItemId, Price.store_id == storeIds[retailPriceTotal['store_name']])).count() == 0:
+                        newPrice = Price(user_list_item_id=userListItemId\
+                                , price=itemResult['price']\
+                                , store_id=storeIds[retailPriceTotal['store_name']]\
+                                , item_url=itemResult['productPageUrl']\
+                                , item_image=itemResult['image'])
+                        session.add(newPrice)
+                    else:
+                        existingPrice = session.query(Price).filter(and_(Price.user_list_item_id==userListItemId, Price.store_id == storeIds[retailPriceTotal['store_name']]))
+                        existingPrice.price=itemResult['price']
+                        existingPrice.item_url=itemResult['productPageUrl']
+                        existingPrice.item_image=itemResult['image']
+                else:
+                    retailPriceTotal['unavailableItems'].append({
+                        'item_name':itemResult['name'],
+                        'item_thumbnail':itemResult['image']
+                    })
+            session.commit()
+            return make_response(retailerPriceTotals, 200)
+    except Exception as e:      
+        print(e)  
         return make_response({'message':'Unable to get prices'}, 400)
 
 
@@ -440,22 +422,22 @@ def getPrices(user, listId:int):
 def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
-            storeId = session.query(Store.store_id).filter(Store.store_name == storeName)
-            
+            storeId = session.query(Store.store_id).filter(Store.store_name == storeName).scalar()
+            print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            # print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
-            # print(list(userListItemIds))
+            print(userListId)
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)            
+            print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
             
-            # print(itemStorePrices)
+            print(list(itemStorePrices))
             results = []
             for price in itemStorePrices:
                 itemStorePrice = dict()
                 itemName = session.query(Item.item_name).join(UserListItem, Item.item_id == UserListItem.item_id)\
                     .filter(UserListItem.user_list_item_id == price.user_list_item_id).scalar()
-                # print(itemName)
+                print(itemName)
                 itemStorePrice['itemName'] = itemName
                 itemStorePrice['storeId'] = price.store_id
                 itemStorePrice['totalPrice'] = price.price
@@ -474,7 +456,7 @@ def removeItem(user, listId, itemId):
     try:
         with Session() as session:
             userListItem = session.query(UserListItem).join(UserList, UserList.user_list_id == UserListItem.user_list_id).\
-                filter(UserListItem.item_id==itemId)\
+                filter(and_(UserListItem.item_id==itemId,UserList.list_id == listId,UserList.user_id == user.user_id))\
                 .one()
             session.delete(userListItem)
             session.commit()
@@ -493,6 +475,9 @@ def index():
 
 # Only for testing
 
+def getProductsInStore(retailerAndArgs):
+    retailer, q, zipcode, lat, long = retailerAndArgs
+    return retailer.getProductsInNearByStore(q, zipcode, lat, long)
 
 @app.route('/getProducts', methods=['GET'])
 @token_required
@@ -500,12 +485,14 @@ def getProducts(user):
     try:
         args = request.args
         q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
-        items:List[Retailer] = sum([retailer.getProductsInNearByStore(q, zipcode, lat, long) for retailer in retailers], start =[])
+        with Pool(cpu_count()-1) as p:
+            items:List[Retailer] = sum(p.map(getProductsInStore, [(retailer, q, zipcode, lat, long) for retailer in retailers]), start=[])
         print(len(items))
         items = getUniqueItems(items, k='itemName')
         print(len(items))
         return make_response(items, 200)
-    except:
+    except Exception as e:
+        print(e)
         return make_response({'message':'Error retrieving products'}, 400)
 
 
@@ -513,7 +500,7 @@ def getProducts(user):
 def walmartTestEndPoint():
     args = request.args
     w = Walmart()
-    return w.getProductsInNearByStore(args["q"], args["zipcode"])
+    return w.getProductsInNearByStore(args["q"], args["zipcode"], None, None)
 
 # Only for testing
 
@@ -524,20 +511,20 @@ def walgreensTestEndPoint():
     print(args['q'])
     print(args['zipcode'])
     w = Walgreens()
-    return w.getProductsInNearByStore(args["q"], args["zipcode"])
+    return w.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
 @app.route('/targetTest')
 def targetTestEndPoint():
    args = request.args
    t = Target()
    
-   return t.getProductsInNearByStore(args["q"], args["zipcode"])
+   return t.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
 @app.route('/krogerTest',methods=['GET'])
 def krogerTestEndpoint():
     k = Kroger()
     args = request.args
-    return k.getProductsInNearByStore(args["q"], args["zipcode"])
+    return k.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
     
 # TODO: Need to remove the below endpoint. Only used for mocking frontend.

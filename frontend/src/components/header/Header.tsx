@@ -45,7 +45,7 @@ function SearchBar({ setQuery, setItemsToDisplay, zipcode, query, setIsLoading, 
     setProgress(30);
     setIsLoading(true);
     axios
-      .get(`/getProducts?q=${query}&zipcode=${zipcode}`)
+      .get(`/walmartTest?q=${query}&zipcode=${zipcode}`)
       .then(response => {
         const { data } = response;
         setItemsToDisplay({ result: data });
@@ -121,6 +121,14 @@ function Login({ userLists, setUserLists }: any) {
                   setShowLoggedInUserOptions(false);
                 }}>
                 Manage lists
+              </p>
+              <hr />
+              <p
+                className="userOptionRow"
+                onClick={() => {
+                  navigate(`/listDetails/${localStorage.getItem('favorite_list_id')}`, { state: { listName: 'Favorite' } });
+                }}>
+                View Favorites
               </p>
               <hr />
               <p

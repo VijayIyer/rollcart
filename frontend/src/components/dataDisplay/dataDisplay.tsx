@@ -13,43 +13,55 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
 
   const handleFavouriteItemClicked = () => {
     setFavorite(!favorite);
+    const favorite_list_id = localStorage.getItem('favorite_list_id');
+    if (favorite === false) {
+      handleAddItemToList({ listId: favorite_list_id, quantity: 1 });
+    } else {
+      handleDeleteItemFromList({ listId: favorite_list_id });
+    }
   };
 
   useEffect(() => {
     const cartListId = localStorage.getItem('cart_list_id');
     if (addToCart === 0 && itemIdCreated !== -1) {
-      axios
-        .delete(`/${cartListId}/${itemIdCreated}`)
-        .then(response => {
-          if (response.status === 200) {
-            console.log(`Item: ${itemName} deleted from the cart: ${cartListId}`);
-          }
-        })
-        .catch(error => {
-          console.log(`Item: ${itemName} was not deleted from the cart: ${cartListId}`);
-        });
-      return;
+      handleDeleteItemFromList({ listId: cartListId });
     } else if (addToCart !== 0) {
-      axios
-        .post(`/${cartListId}/addItem`, {
-          item_name: itemName,
-          quantity: addToCart,
-        })
-        .then(response => {
-          if (response.status === 201) {
-            console.log(`Item: ${itemName} added to the cart: ${cartListId}`);
-            const itemId = response.data.split(' ')[1];
-            setItemIdCreated(itemId);
-            console.log('Response is', response);
-          }
-        })
-        .catch(error => {
-          console.log(`Item: ${itemName} was not added to the cart: ${cartListId}`);
-        });
+      handleAddItemToList({ listId: cartListId, quantity: addToCart });
     }
   }, [addToCart]);
 
-  // const handleAddToCartClicked = () => {};
+  const handleAddItemToList = ({ listId, quantity }: any) => {
+    axios
+      .post(`/${listId}/addItem`, {
+        item_name: itemName,
+        quantity: quantity,
+        item_thumbnail: itemThumbnail,
+      })
+      .then(response => {
+        if (response.status === 201) {
+          console.log(`Item: ${itemName} added to the cart: ${listId}`);
+          const itemId = response.data.split(' ')[1];
+          setItemIdCreated(itemId);
+          console.log('Response is', response);
+        }
+      })
+      .catch(error => {
+        console.log(`Item: ${itemName} was not added to the cart: ${listId}`);
+      });
+  };
+
+  const handleDeleteItemFromList = ({ listId }: any) => {
+    axios
+      .delete(`/${listId}/${itemIdCreated}`)
+      .then(response => {
+        if (response.status === 200) {
+          console.log(`Item: ${itemName} deleted from the cart: ${listId}`);
+        }
+      })
+      .catch(error => {
+        console.log(`Item: ${itemName} was not deleted from the cart: ${listId}`);
+      });
+  };
 
   return (
     <div className="item" id={itemId}>
@@ -64,7 +76,6 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
             className="addItemButton itemThumbnail pointerCursor"
             onClick={() => {
               setAddToCart(addToCart + 1);
-              // handleAddToCartClicked();
             }}>
             <i className="fa-solid fa-plus"> </i> Add
           </button>
@@ -74,7 +85,6 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
               className="addItemButtonAction pointerCursor"
               onClick={() => {
                 setAddToCart(addToCart - 1);
-                // handleAddToCartClicked();
               }}>
               <i className="fa-solid fa-minus"> </i>
             </button>
@@ -83,7 +93,6 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
               className="addItemButtonAction pointerCursor"
               onClick={() => {
                 setAddToCart(addToCart + 1);
-                // handleAddToCartClicked();
               }}>
               <i className="fa-solid fa-plus"> </i>
             </button>
@@ -106,7 +115,7 @@ export const ShowItemCard = ({ itemId, itemName, itemPrice, itemThumbnail, produ
           setUserLists={setUserLists}
           selectedLists={selectedLists}
           setSelectedLists={setSelectedLists}
-          item={{ itemId, itemName }}
+          item={{ itemId, itemName, itemThumbnail }}
         />
       )}
     </div>
@@ -164,9 +173,7 @@ export const NoItemsToDisplay = () => {
   return (
     <div className="noItemsToDisplay">
       <img className="noItemsImageIcon" src="fruits.png" alt="" width={50} height={50} />
-      <h3>Please search for any product name</h3>
+      <h3>Please search for any product</h3>
     </div>
   );
 };
-
-// export const

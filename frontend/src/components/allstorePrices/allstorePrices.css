@@ -1,3 +1,19 @@
+.loading-bar {
+  align-items: center;
+  justify-content: center;
+  margin-left: 46%;
+  margin-top: 100px;
+}
+.allstorePricesWaitMessage {
+  margin-left: -15%;
+  font-size: large;
+}
+
+.allstorePriceTitle {
+  text-align: center;
+  font-size: x-large;
+  font-weight: 600;
+}
 .allstorePricesContainer {
   margin: 20px;
   border: 1px solid black;
@@ -21,7 +37,7 @@
 .allstorePricesDiv {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-column-gap: 20px;
+  grid-column-gap: 10px;
   grid-row-gap: 20px;
 }
 
@@ -36,7 +52,7 @@
 
 .allstorePricesBox {
   /* height: 100%; */
-  box-shadow: 0px 2px 8px rgb(0 0 0 / 16%);
+  box-shadow: 0px 2px 8px rgba(43, 26, 232, 0.16);
   border-radius: 12px;
   align-items: center;
   display: grid;
@@ -69,4 +85,59 @@
 
 .allstorePrice {
   font-weight: 500;
+}
+
+.stack-top {
+  /* adjust the below to control the shape */
+  --d: 5px;
+  --w: 130px;
+  --c: #333;
+  /**/
+
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(29.29%, -100%) rotate(45deg); /* 29.29% = 100%*(1 - cos(45deg)) */
+  color: #fff;
+  text-align: center;
+  width: var(--w);
+  transform-origin: bottom left;
+  padding: 5px 0 calc(var(--d) + 5px);
+  background: linear-gradient(rgba(0, 0, 0, 0.6) 0 0) bottom/100% var(--d) no-repeat var(--c);
+  clip-path: polygon(
+    0 100%,
+    0 calc(100% - var(--d)),
+    50% calc(100% - var(--d) - var(--w) / 2),
+    100% calc(100% - var(--d)),
+    100% 100%,
+    calc(100% - var(--d)) calc(100% - var(--d)),
+    var(--d) calc(100% - var(--d))
+  );
+}
+.storeTableHeader {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0px;
+}
+
+.green {
+  background: green;
+}
+
+.bg-green {
+  color: rgb(1, 90, 1);
+}
+.bg-red {
+  color: rgb(147, 3, 3);
+}
+.unavailableItems {
+  color: rgb(147, 3, 3);
+}
+
+.allAvailable {
+  color: rgb(1, 90, 1);
+}
+.table {
+  margin: 50px 100px;
+  font-size: larger;
 }

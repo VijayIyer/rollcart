@@ -3,17 +3,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 1000px;
+  width: 1200px;
 }
 
 .comparePrices {
   /* /* width: 100px; */
-  height: 50px;
+  margin-top: 20px;
+  height: 70px;
+  width: 150px;
   background-color: #f23938;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.comparePrices:hover {
+  background-color: #fd4b4b;
 }
 
 .comparePricesTitle {
@@ -23,7 +29,7 @@
 }
 .comparePricesFooter {
   margin: 1px;
-  font-size: x-small;
+  font-size: small;
 }
 
 .com .listCount {
@@ -33,8 +39,8 @@
   margin: 50px;
   /* border: 1px solid red; */
   padding: 20px;
-  width: 70%;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  /* width: 70%; */
+  /* box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); */
 }
 
 .tableTitle {

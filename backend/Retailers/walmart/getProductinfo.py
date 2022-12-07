@@ -69,21 +69,27 @@ class Walmart(Retailer):
         return -1
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
-        self.params["query"] = product
-        self.params["store_id"] = self.getNearestStoreId(zipcode,lat,long)
-        out = GoogleSearch(self.params).get_dictionary()
-        response = []
-        if "organic_results" not in out:
+        try:
+            self.params["query"] = product
+            self.params["store_id"] = self.getNearestStoreId(zipcode,lat,long)
+            out = GoogleSearch(self.params).get_dictionary()
+            response = []
+            if "organic_results" not in out:
+                print(out)
+                return response
+            for item in out["organic_results"]:
+                response.append(
+                    {
+                        "itemId": item["us_item_id"],
+                        "itemName": item["title"],
+                        "itemPrice": item["primary_offer"]["offer_price"],
+                        "itemThumbnail":item["thumbnail"],
+                        "productPageUrl":item["product_page_url"]
+                    }
+                )
+            print("Store id using is",self.params["store_id"])
             return response
-        for item in out["organic_results"]:
-            response.append(
-                {
-                    "itemId": item["us_item_id"],
-                    "itemName": item["title"],
-                    "itemPrice": item["primary_offer"]["offer_price"],
-                    "itemThumbnail":item["thumbnail"],
-                    "productPageUrl":item["product_page_url"]
-                }
-            )
-        return response
+        except Exception as e:
+            print(e)
+            return []
 

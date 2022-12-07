@@ -23,31 +23,33 @@ class Target(Retailer):
         return 'Target'
 
     def getNearestStore(self,userLocation,lat,long):
-        if not(lat and long):
-            userData = self.dist.query_postal_code(userLocation)
-            lat = userData.latitude
-            long = userData.longitude
-        # r = geo_locator.reverse((lat, long))
-        # userLocation = r.raw['address']['postcode']
-        stores = self.getNearestStores(userLocation,lat,long)
-        if len(stores) > 0 and len(stores[0]['locations']) > 0:
+        try:
+            if not(lat and long):
+                userData = self.dist.query_postal_code(userLocation)
+                lat = userData.latitude
+                long = userData.longitude
+            # r = geo_locator.reverse((lat, long))
+            # userLocation = r.raw['address']['postcode']
+            stores = self.getNearestStores(userLocation,lat,long)
+            if len(stores) > 0 and len(stores[0]['locations']) > 0:
 
-            nearestStore = stores[0]["locations"][0]
-            nearestStore_geographic = nearestStore['geographic_specifications']
-            nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
+                nearestStore = stores[0]["locations"][0]
+                nearestStore_geographic = nearestStore['geographic_specifications']
+                nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
 
-            for store in stores[0]['locations']:
-                geographic = store['geographic_specifications']
-                curDistance = geodesic((geographic['latitude'], geographic['longitude']), (lat,long)).miles
-                store['curDistance'] = curDistance
-                if curDistance < nearestDistance:
-                    nearestDistance = curDistance
-                    nearestStore = store
+                for store in stores[0]['locations']:
+                    geographic = store['geographic_specifications']
+                    curDistance = geodesic((geographic['latitude'], geographic['longitude']), (lat,long)).miles
+                    store['curDistance'] = curDistance
+                    if curDistance < nearestDistance:
+                        nearestDistance = curDistance
+                        nearestStore = store
 
 
-            return nearestStore
-
-        return -1
+                return nearestStore
+        except Exception as e:
+            print(e)
+            return -1
 
     def getNearestStoreId(self, userLocation,lat,long):
         store = self.getNearestStore(userLocation,lat,long)
@@ -117,6 +119,7 @@ class Target(Retailer):
                         "productPageUrl": product_matches[i]["item"]["enrichment"]["buy_url"]
                     }
                 )
-        except:
+        except Exception as e:
+            print(e)
             return []
         return result

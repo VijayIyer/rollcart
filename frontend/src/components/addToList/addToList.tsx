@@ -14,9 +14,10 @@ export const AddToList = ({ showListModal, setShowListModal, userLists, setUserL
         .post(`/${listId}/addItem`, {
           item_name: item.itemName,
           quantity: 1,
+          item_thumbnail: item.itemThumbnail,
         })
         .then(response => {
-          if (response.status === 200) {
+          if (response.status === 201) {
             successfulToast(item.itemName + ' added to the ' + listname + '!');
           }
         })
@@ -35,22 +36,27 @@ export const AddToList = ({ showListModal, setShowListModal, userLists, setUserL
         </div>
         <h1 className="addtolistTitle">Add to List</h1>
       </div>
-      {userLists.length === 0 ? <p>Please create a new list from the manage lists selection!</p> : <p>Please select one or multiple lists!</p>}
-
-      <div className="userlistdetails">
-        {userLists.map(({ listId, listname }: any) => {
-          return <AddToListRow listId={listId} listname={listname} setSelectedLists={setSelectedLists} selectedLists={selectedLists} />;
-        })}
-      </div>
-      <div className="addToListButton">
-        <button
-          className="button-3"
-          onClick={() => {
-            handleAddToListButtonClicked(selectedLists);
-          }}>
-          Add
-        </button>
-      </div>
+      {userLists.length === 0 ? (
+        <p>Please create a new list from the manage lists selection!</p>
+      ) : (
+        <div>
+          <p>Please select one or multiple lists!</p>
+          <div className="userlistdetails">
+            {userLists.map(({ listId, listname }: any) => {
+              return <AddToListRow listId={listId} listname={listname} setSelectedLists={setSelectedLists} selectedLists={selectedLists} />;
+            })}
+          </div>
+          <div className="addToListButton">
+            <button
+              className="button-3"
+              onClick={() => {
+                handleAddToListButtonClicked(selectedLists);
+              }}>
+              Add
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   ) : (
     <></>
