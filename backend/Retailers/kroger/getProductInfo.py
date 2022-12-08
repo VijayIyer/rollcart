@@ -111,7 +111,7 @@ class Kroger(Retailer):
       stores_lat_long = exact_response.json()
 
       return stores_lat_long['data']
-    except:
+    except Exception as e:
       return -1
 
   def getNearestStore(self,zipcode : str,lat,long):

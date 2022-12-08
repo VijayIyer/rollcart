@@ -120,7 +120,7 @@ class Walgreens(Retailer):
             for group in results:
                 if float(group) < lowestPrice:
                     lowestPrice = float(group)
-        except:
+        except Exception as e:
             # replace with logger
             print("no price string found")
         return -1 if lowestPrice == float("inf") else lowestPrice
@@ -145,10 +145,11 @@ class Walgreens(Retailer):
                     # print(data["products"])
                     for product in resp.data["products"]:
                         productInfo = product["productInfo"]
-                        if "storeInv" in productInfo.keys():
-                            if productInfo["storeInv"] == IN_STOCK:
-                                # this is where desired fields can be added
-                                products.append(Item(itemName=productInfo["productName"],
+                        if "storeInv" not in productInfo.keys() and productInfo["storeInv"] != IN_STOCK:
+                            print("request to {} failed".format(
+                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
+                            return []
+                        products.append(Item(itemName=productInfo["productName"],
                                                     itemId=productInfo["upc"],
                                                     itemPrice=self.getCorrectPrice(
                                     productInfo["priceInfo"]["regularPrice"]),
@@ -157,10 +158,6 @@ class Walgreens(Retailer):
                                     productPageUrl=BASE_URL+productInfo["productURL"])
                                 )
                     return products
-                else:
-                    print("request to {} failed".format(
-                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
-                    return []
         except Exception as e:
             print(e)
             return []
