@@ -58,7 +58,7 @@ Price = Base.classes.price
 
 
 # retailers list
-retailers = [Kroger()]
+retailers = [Target(), Walmart(), Walgreens(), Kroger()]
 # retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
