@@ -50,7 +50,7 @@ class Kroger(Retailer):
 
   def getProductsInNearByStore(self, product: str, zipcode: str,lat,long):
       try:
-        storeId = self.getNearestStoreId(zipcode,lat,long)
+        storeId = self.getNearestStore(zipcode,lat,long)['storeId']
         if storeId == -1:
           return []
       
@@ -87,7 +87,6 @@ class Kroger(Retailer):
                         "itemPrice": minprice,
                         "itemThumbnail":image,
                         "productPageUrl":purl
-
             }
 
             itemsretrived.append(item)
@@ -117,35 +116,35 @@ class Kroger(Retailer):
       long = userData.longitude
     stores = self.getNearestStores(zipcode,lat,long)
     if stores != -1:
-      nearestStore = stores[0]
-      storeGeolocation = nearestStore['geolocation']
-      nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
+      nearestStore = {
+          "storeName" : "",
+          "storeId" : "",
+          "currDistance" : "",
+          "Latitude" : "",
+          "Longitude" : ""
+        }
+      # storeGeolocation = nearestStore['geolocation']
+      # nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
+      nearestDistance = float('inf')
 
       for store in stores:
         store_location = store['geolocation']
         curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
         store['curDistance'] = curDistance
         if curDistance < nearestDistance:
-          nearestStore = store
           nearestDistance = curDistance
+          nearestStore = {
+            "storeName" : store['name'],
+            "storeId" : store['locationId'],
+            "currDistance" : nearestDistance,
+            "latitude" : store_location['latitude'],
+            "longitude" : store_location['longitude']
+          }
 
       return nearestStore
 
     return -1
 
-  def getNearestStoreId(self,zipcode,lat,long):
-    store = self.getNearestStore(zipcode,lat,long)
-    if store != -1:
-      return store['locationId']
-
-    return -1
-
-  def getNearestStoreDistance(self,zipcode,lat,long):
-    store = self.getNearestStore(zipcode,lat,long)
-    if store != -1:
-      return store['curDistance']
-
-    return -1
 
 
         
