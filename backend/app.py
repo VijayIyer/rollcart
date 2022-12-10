@@ -21,6 +21,45 @@ from functools import wraps
 import random
 import traceback
 import datetime
+import logging
+from flask.logging import default_handler
+from logging.config import dictConfig
+import os
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+                "datefmt": "%B %d, %Y %H:%M:%S %Z"
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "formatter": "default",
+            },
+             "file": {
+                "class": "logging.FileHandler",
+                "filename": os.path.join("logs", "flask.log"),
+                "formatter": "default",
+            },
+             "size-rotate": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": os.path.join("logs", "rotate.log"),
+                "maxBytes": 1000000,
+                "backupCount": 5,
+                "formatter": "default",
+            },
+        },
+        "root":{
+                "level":"WARNING",
+                "handlers":["console", "size-rotate"]
+            }
+    }
+)
 
 app = Flask(__name__)
 
@@ -29,24 +68,18 @@ app = Flask(__name__)
 
 # Using a development configuration
 app.config.from_object(config.DevConfig)
-
-
 CORS(app)
-    
+app.logger.removeHandler(default_handler)
 
 DB_PARAMS = app.config['DATABASE_PARAMS']
 db_connect_string="mysql+pymysql://{}:{}@{}:{}/{}".format(DB_PARAMS['USER_NAME'], DB_PARAMS['PASSWORD'], DB_PARAMS['SERVER_NAME'], DB_PARAMS['PORT_NUMBER'], DB_PARAMS['NAME'])
 ssl_args = {'ssl': {'ca':'DigiCertGlobalRootCA.crt.pem'}}
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = db_connect_string
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 engine = create_engine(db_connect_string, connect_args=ssl_args)
 Session = sessionmaker(bind=engine)
-# Session = SessionMaker()
 
-# reflect an existing database into a new model
 Base = automap_base()
-# reflect the tables
 Base.prepare(engine, reflect=True)
 User = Base.classes.user
 List = Base.classes.list
@@ -57,9 +90,8 @@ Store = Base.classes.store
 Price = Base.classes.price
 
 
-# retailers list
+
 retailers = [Target(), Walmart(), Walgreens(), Kroger()]
-# retailers = [MockRetailer(), MockRetailer(), MockRetailer(), MockRetailer()]
 
 def token_required(f):
     @wraps(f)
@@ -79,7 +111,6 @@ def token_required(f):
     return decorated
 
 
-## db endpoints
 @app.route('/login', methods=['POST'])
 def login():
     try:
@@ -98,7 +129,8 @@ def login():
             else:
                 return make_response({'message':'Invalid Credentials'}, 403)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response({'message':'Unknown Error, check logs'}, 400)
 
 
@@ -108,7 +140,6 @@ def register():
     try:
         with Session() as session:
             user = request.get_json()
-            # hashedPassword = generate_password_hash(user['password'], method='sha256')
             existingUserCount = session.query(User).filter(User.user_name == user['username']).count()
             if existingUserCount > 0:
                 return make_response({'message':'User already exists'}, 409)
@@ -134,10 +165,12 @@ def register():
             newUser.favorite_list_id = newFavoriteList.list_id
             newUser.cart_list_id = newCartList.list_id
             session.commit()
+            app.logger.info('added user {} to users table'.format(newUser.user_id))
         return make_response(response, 201)
     except Exception as e:
-        print(e)
-        return make_response('Error adding user', 400)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
+        return make_response({'message':'Unknown Error, check logs'}, 400)
 
 
 @app.route('/logout', methods=['POST'])
@@ -148,16 +181,16 @@ def logout():
             if session.query(User).filter(User.user_name == body['userName']).count() == 0:
                 return make_response({'message':'No such User {} found in database'.format(body['userName'])})
             else:
+                
                 loggedInUser = session.query(User).filter(User.user_name == body['userName']).one()
-                ## turn below into logged out update statement
-                print(loggedInUser)
+                app.logger.info('user {} loggedin'.format(User.user_name))
                 return make_response({'message':'User logged out successfully'}, 200)
     except Exception as e:
-        print(e)
-        return make_response({'message':'error logging out user'}, 400)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
+        return make_response({'message':'Unknown Error, check logs'}, 500)
 
 
-#  @app.route('/getUsers', methods=['GET']) # API endpoint not exposed / should only be for tests
 @app.route('/addList', methods=['POST'])
 @token_required
 def addList(user):
@@ -165,25 +198,22 @@ def addList(user):
         returnListId = None
         with Session() as session:
             body = request.get_json()
-            # checking user exists
             if session.query(User).filter(User.user_id == user.user_id).count() == 0:
                 return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
-            # adding to list table
             newList = List(list_name = body['listname'])
             session.add(newList)
-            # flush() will allow to return id of inserted row
             session.flush()
-            # adding to user list relationship table
             newUserList = UserList(user_id = user.user_id, list_id = newList.list_id)
             session.add(newUserList)
-            # flush() will allow to return id of inserted row
             session.flush()
             returnListId = newUserList.list_id
             session.commit()
+            app.logger.info('added list {} to lists table'.format(newList.list_id))
         return make_response({'listId': returnListId}, 201)
     except Exception as e:
-        print(e)
-        return make_response({'message':'Unable to add list'}, 500)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
+        return make_response({'message':'Unknown Error, check logs'}, 500)
 
 
 @app.route('/getLists', methods=['GET'])
@@ -194,7 +224,6 @@ def getLists(user):
     '''
     try:
         with Session() as session:
-            # checking user exists
             if session.query(User).filter(User.user_id == user.user_id).count() == 0:
                 return make_response({'message':'User with id {} not found'.format(user.user_id)}, 400)
             listIds = session.query(UserList.list_id).join(User, User.user_id == UserList.user_id).\
@@ -209,7 +238,7 @@ def getLists(user):
                 listResults.append(listDict)
         return make_response(listResults, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path), exc_info=True)
         return make_response(e, 400)
 
 
@@ -233,9 +262,23 @@ def getListsForItem(user, itemId):
                 listResults.append(listDict)
         return make_response(listResults, 200)
     except Exception as e:
-        print(e)
-        return make_response(e, 400)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
+        return make_response({'message':'get lists for item {} failed'.format(itemId)}, 500)
 
+
+@app.after_request
+def logAfterRequest(response):
+
+    app.logger.info(
+        "path: %s | method: %s | status: %s >>> %s",
+        request.path,
+        request.method,
+        response.status,
+        response
+    )
+
+    return response
 
 
 @app.route('/getListItems/<int:listId>', methods=['GET'])
@@ -260,7 +303,8 @@ def getListItems(user, listId:int):
                 itemResults.append(itemDict)
         return make_response(itemResults, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response('Error retrieving items in list', 401)
 
 
@@ -279,7 +323,8 @@ def getItems(user):
                 results.append(itemDict)
         return make_response(results, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response({'message':'unable to get items'}, 400)
 
 
@@ -295,8 +340,7 @@ def addItem(user, listId:int):
             body = request.get_json()
             userListId = session.query(UserList.user_list_id).\
                     filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
-                        first() # create issue, weird code
-            # check if item exists
+                        first()
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
                 newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
@@ -309,8 +353,6 @@ def addItem(user, listId:int):
                 session.commit()
             else:
                 returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
-                # check if item exists in same list
-                
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
                     .filter(and_(UserListItem.item_id == returnItemId\
@@ -329,7 +371,8 @@ def addItem(user, listId:int):
 
         return make_response('Item {} added/updated in list {}'.format(returnItemId, listId), 201)
     except Exception as e:
-        print(e.with_traceback(None))
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response('Error adding Item', 400)
 
 
@@ -348,8 +391,9 @@ def removeList(user, listId:int):
             session.commit()
         return make_response({'message':'List {} deleted successfully'.format(listId)}, 200)
     except Exception as e:
-        print(e)
-        return make_response('Error Deleting List', 500)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
+        return make_response({'message':'Error Deleting List'}, 500)
 
 def getMinPriceForItem(retailerWithArgs):
     retailer, name, image, quantity, zip, lat, long = retailerWithArgs
@@ -378,8 +422,7 @@ def getPrices(user, listId:int):
                 for retailer in retailers],\
                 start=[])
             itemResults = []
-            # this is where the calls are parallelized
-            print(len(retailerWithArgs))
+            app.logger.info('processing on following list will be parallelized:{}'.format(retailerWithArgs))
             with Pool(cpu_count() - 1) as p:
                 itemResults = [x for x in p.map(getMinPriceForItem, retailerWithArgs)]
 
@@ -417,7 +460,8 @@ def getPrices(user, listId:int):
             session.commit()
             return make_response(retailerPriceTotals, 200)
     except Exception as e:      
-        print(e)  
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response({'message':'Unable to get prices'}, 400)
 
 
@@ -427,21 +471,17 @@ def getStorePrices(user, listId:int, storeName:str):
     try:
         with Session() as session:
             storeId = session.query(Store.store_id).filter(Store.store_name == storeName).scalar()
-            print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
-            print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
-            print(list(userListItemIds))
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)            
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
             
-            print(list(itemStorePrices))
             results = []
             for price in itemStorePrices:
                 itemStorePrice = dict()
                 itemName = session.query(Item.item_name).join(UserListItem, Item.item_id == UserListItem.item_id)\
                     .filter(UserListItem.user_list_item_id == price.user_list_item_id).scalar()
-                print(itemName)
+            
                 itemStorePrice['itemName'] = itemName
                 itemStorePrice['storeId'] = price.store_id
                 itemStorePrice['totalPrice'] = price.price
@@ -450,7 +490,8 @@ def getStorePrices(user, listId:int, storeName:str):
                 results.append(itemStorePrice)
         return make_response(results, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response({'message':'Unable to get prices'}, 400)
 
 
@@ -467,7 +508,8 @@ def removeItem(user, listId, itemId):
         return make_response({'message': 'Item {} deleted successfully'\
             .format(userListItem.item_id)}, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response('unable to remove item from list', 500)
 
 
@@ -476,8 +518,6 @@ def removeItem(user, listId, itemId):
 def index():
     #print('Request for index page received')
     return {"welcomeMessage": "Hi there! We're currently getting things setup and should be ready for use in a few weeks!"}
-
-# Only for testing
 
 def getProductsInStore(retailerAndArgs):
     retailer, q, zipcode, lat, long = retailerAndArgs
@@ -491,12 +531,11 @@ def getProducts(user):
         q, zipcode, lat, long = args.get('q'), args.get('zipcode'), args.get('lat'), args.get('long')
         with Pool(cpu_count()-1) as p:
             items:List[Retailer] = sum(p.map(getProductsInStore, [(retailer, q, zipcode, lat, long) for retailer in retailers]), start=[])
-        print(len(items))
         items = getUniqueItems(items, k='itemName')
-        print(len(items))
         return make_response(items, 200)
     except Exception as e:
-        print(e)
+        app.logger.error('{} failed with exception:{}'.format(request.path, e), exc_info=True)
+        app.logger.exception('exception in {}'.format(request.path))
         return make_response({'message':'Error retrieving products'}, 400)
 
 
@@ -506,14 +545,10 @@ def walmartTestEndPoint():
     w = Walmart()
     return w.getProductsInNearByStore(args["q"], args["zipcode"], None, None)
 
-# Only for testing
-
 
 @app.route('/walgreensTest', methods=['GET'])
 def walgreensTestEndPoint():
     args = request.args
-    print(args['q'])
-    print(args['zipcode'])
     w = Walgreens()
     return w.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
@@ -530,45 +565,5 @@ def krogerTestEndpoint():
     args = request.args
     return k.getProductsInNearByStore(args["q"], args["zipcode"],None, None)
 
-    
-# TODO: Need to remove the below endpoint. Only used for mocking frontend.
-@app.route('/getItems')
-def test():
-    with open('./data.json', 'r') as j:     
-        out = json.loads(j.read())
-    return out 
-
-# TODO: Need to remove the below endpoint. Only used for mocking frontend.
-@app.route('/getStoreItems')
-def test2():
-    with open('./data.json', 'r') as j:     
-        out = json.loads(j.read())
-    return out 
-
-# TODO: Need to remove the below endpoint. Only used for mocking frontend.
-@app.route("/getPrices/<int:listId>")
-def test1(listId: int):
-    print("List id requested is",listId)
-    return [
-        {
-            "store":"walmart",
-            "price": 20
-        },
-        {
-            "store": "target",
-            "price": 21.21
-        },
-        {
-            "store": "walgreens",
-            "price": 11.21
-        },
-        {
-            "store": "kroger",
-            "price": 11.21
-        },
-        
-    ]
-
 if __name__ == '__main__':
     app.run()
-
