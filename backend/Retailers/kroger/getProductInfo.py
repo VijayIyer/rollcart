@@ -52,7 +52,7 @@ class Kroger(Retailer):
       try:
         storeId = self.getNearestStore(zipcode,lat,long)['storeId']
         if storeId == -1:
-          return {"Message ":" Kroger store unavailable at given zipcode"}
+          return []
       
         apiurl =   PRODUCTSEARCHURL
         params = {
@@ -62,7 +62,6 @@ class Kroger(Retailer):
           'filter.fulfillment':'ais'
         }
         response = requests.get(apiurl,params=params,headers=self.__header)
-
         if response.status_code == 200 :
           responsevalue = response.json()
 
