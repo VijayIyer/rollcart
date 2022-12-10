@@ -5,6 +5,7 @@ import re
 import pgeocode
 import requests
 from geopy.distance import geodesic
+import logging
 
 params = config.Config.WALGREENS_PARAMS
 BASE_URL = params["BASE_URL"]
@@ -79,27 +80,31 @@ class Walgreens(Retailer):
         return []
 
     def getNearestStore(self,userLocation,lat,long):
-        userData = self.dist.query_postal_code(userLocation)
-        userLat = userData.latitude
-        userLon = userData.longitude
-        if lat and long:
-            userLat = lat
-            userLon = long
-        stores = self.getNearestStores(userLat,userLon)
-        
-        if len(stores) > 0:
-            nearestStore = stores[0]
-            nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
-            for store in stores:
-                curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
-                store['curDistance'] = curDistance
-                if curDistance < nearestDistance:
-                    nearestDistance = curDistance
-                    nearestStore = store
+        try:
+            userData = self.dist.query_postal_code(userLocation)
+            userLat = userData.latitude
+            userLon = userData.longitude
+            if lat and long:
+                userLat = lat
+                userLon = long
+            stores = self.getNearestStores(userLat,userLon)
+            
+            if len(stores) > 0:
+                nearestStore = stores[0]
+                nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+                for store in stores:
+                    curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
+                    store['curDistance'] = curDistance
+                    if curDistance < nearestDistance:
+                        nearestDistance = curDistance
+                        nearestStore = store
 
-            return nearestStore
-        
-        return -1
+                return nearestStore
+            
+            return -1
+        except Exception as e:
+            logging.exception("getNearestStore failed in walgreens with following exception")
+            return -1
 
     def getNearestStoreId(self,userLocation,lat,long):
         store = self.getNearestStore(userLocation,lat,long)
@@ -159,5 +164,5 @@ class Walgreens(Retailer):
                                 )
                     return products
         except Exception as e:
-            print(e)
+            logging.exception("getProductsInNearByStore failed in walgreens with following exception")
             return []

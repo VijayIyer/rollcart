@@ -4,7 +4,7 @@ import json
 
 import os,base64
 import requests
-
+import logging
 from Retailers import config
 from geopy.distance import geodesic
 import pgeocode
@@ -94,7 +94,7 @@ class Kroger(Retailer):
           return itemsretrived
         return []
       except Exception as e:
-        print(e)
+        logging.exception("getProducInNearbyStores failed in Kroger with following exception")
         return []
 
   def getNearestStores(self,zipcode : str,lat,long):
@@ -112,30 +112,35 @@ class Kroger(Retailer):
 
       return stores_lat_long['data']
     except Exception as e:
+      logging.exception("getNearestStores failed in Kroger with following exception")
       return -1
 
   def getNearestStore(self,zipcode : str,lat,long):
-    if not(lat and long):
-      userData = self.dist.query_postal_code(zipcode)
-      lat = userData.latitude
-      long = userData.longitude
-    stores = self.getNearestStores(zipcode,lat,long)
-    if stores != -1:
-      nearestStore = stores[0]
-      storeGeolocation = nearestStore['geolocation']
-      nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
+    try:
+      if not(lat and long):
+        userData = self.dist.query_postal_code(zipcode)
+        lat = userData.latitude
+        long = userData.longitude
+      stores = self.getNearestStores(zipcode,lat,long)
+      if stores != -1:
+        nearestStore = stores[0]
+        storeGeolocation = nearestStore['geolocation']
+        nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
 
-      for store in stores:
-        store_location = store['geolocation']
-        curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
-        store['curDistance'] = curDistance
-        if curDistance < nearestDistance:
-          nearestStore = store
-          nearestDistance = curDistance
+        for store in stores:
+          store_location = store['geolocation']
+          curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
+          store['curDistance'] = curDistance
+          if curDistance < nearestDistance:
+            nearestStore = store
+            nearestDistance = curDistance
 
-      return nearestStore
-
-    return -1
+        return nearestStore
+    
+      return -1
+    except Exception as e:
+      logging.exception("getNearestStore failed in Kroger with following exception")
+      return -1
 
   def getNearestStoreId(self,zipcode,lat,long):
     store = self.getNearestStore(zipcode,lat,long)
