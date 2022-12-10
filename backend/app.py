@@ -6,7 +6,7 @@ import jwt
 from Retailers import config
 from flask import Flask, request, make_response
 from Retailers.util import getUniqueItems
-from Retailers.Kroger.getProductInfo import Kroger
+from Retailers.kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
 from Retailers.walgreens.getProductInfo import Walgreens
 from Retailers.target.getProductInfo import Target
@@ -298,7 +298,7 @@ def addItem(user, listId:int):
                         first() # create issue, weird code
             # check if item exists
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
+                newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
@@ -310,6 +310,7 @@ def addItem(user, listId:int):
             else:
                 returnItemId = session.query(Item.item_id).filter(Item.item_name == body['item_name']).scalar()
                 # check if item exists in same list
+                
                 if session.query(UserListItem).join(UserList, UserList.user_list_id\
                      == UserListItem.user_list_id)\
                     .filter(and_(UserListItem.item_id == returnItemId\
@@ -381,8 +382,12 @@ def getPrices(user, listId:int):
             print(len(retailerWithArgs))
             with Pool(cpu_count() - 1) as p:
                 itemResults = [x for x in p.map(getMinPriceForItem, retailerWithArgs)]
+
+            nearestStore = {}
+            for retailer in retailers:
+                nearestStore[str(retailer)] = retailer.getNearestStore(zip, lat, long)
             
-            retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':retailer.getNearestStoreDistance(zip, lat, long)}\
+            retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':nearestStore[str(retailer)]['currDistance'], 'latitude' : nearestStore[str(retailer)]['latitude'],'longitude' : nearestStore[str(retailer)]['longitude']}\
                  for retailer in retailers]
             storeIds = {str(retailer):session.query(Store.store_id).filter(Store.store_name == str(retailer)).scalar() for retailer in retailers}
             for itemResult in itemResults:
@@ -425,7 +430,7 @@ def getStorePrices(user, listId:int, storeName:str):
             print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
             print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)            
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
             print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))

@@ -81,42 +81,44 @@ class Walgreens(Retailer):
 
     def getNearestStore(self,userLocation,lat,long):
         try:
-            userData = self.dist.query_postal_code(userLocation)
-            userLat = userData.latitude
-            userLon = userData.longitude
-            if lat and long:
-                userLat = lat
-                userLon = long
-            stores = self.getNearestStores(userLat,userLon)
-            
-            if len(stores) > 0:
-                nearestStore = stores[0]
-                nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
-                for store in stores:
-                    curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
-                    store['curDistance'] = curDistance
-                    if curDistance < nearestDistance:
-                        nearestDistance = curDistance
-                        nearestStore = store
+          userData = self.dist.query_postal_code(userLocation)
+          userLat = userData.latitude
+          userLon = userData.longitude
+          if lat and long:
+              userLat = lat
+              userLon = long
+          stores = self.getNearestStores(userLat,userLon)
 
-                return nearestStore
-            
-            return -1
+          if len(stores) > 0:
+              nearestStore = {
+                      "storeName" : "",
+                      "storeId" : "",
+                      "currDistance" : "",
+                      "Latitude" : "",
+                      "Longitude" : ""
+                  }
+              # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+              nearestDistance = float("inf")
+              for store in stores:
+                  curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
+                  store['curDistance'] = curDistance
+                  if curDistance < nearestDistance:
+                      nearestDistance = curDistance
+                      nearestStore = {
+                              "storeName" : "",
+                              "storeId" : store["store"]["storeNumber"],
+                              "currDistance" : nearestDistance,
+                              "latitude" : store['latitude'],
+                              "longitude" : store['longitude']
+                          }
+
+              return nearestStore
+
+          return -1
         except Exception as e:
-            logging.exception("getNearestStore failed in walgreens with following exception")
-            return -1
+          logging.exception("getNearestStore failed in walgreens with following exception")
+          return -1
 
-    def getNearestStoreId(self,userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store != -1:
-            return store["store"]["storeNumber"]
-
-        return -1
-
-    def getNearestStoreDistance(self,userLocation,lat,long):
-        store = self.getNearestStore(userLocation,lat,long)
-        if store != -1:
-            return store['curDistance']
         
     def getCorrectPrice(self, priceString: str):
         lowestPrice = float("inf")
@@ -132,7 +134,7 @@ class Walgreens(Retailer):
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
         try:
-            storeNumber = self.getNearestStoreId(zipcode,lat,long)
+            storeNumber = self.getNearestStore(zipcode,lat,long)['storeId']
             # failed to find nearby store to this zipcode
             if storeNumber == -1:
                 print("unsuccessful store search request")

@@ -45,7 +45,7 @@ function SearchBar({ setQuery, setItemsToDisplay, zipcode, query, setIsLoading, 
     setProgress(30);
     setIsLoading(true);
     axios
-      .get(`/walmartTest?q=${query}&zipcode=${zipcode}`)
+      .get(`/getProducts?q=${query}&zipcode=${zipcode}`)
       .then(response => {
         const { data } = response;
         setItemsToDisplay({ result: data });
