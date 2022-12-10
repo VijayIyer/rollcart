@@ -6,7 +6,7 @@ import jwt
 from Retailers import config
 from flask import Flask, request, make_response
 from Retailers.util import getUniqueItems
-from Retailers.Kroger.getProductInfo import Kroger
+from Retailers.kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
 from Retailers.walgreens.getProductInfo import *
 from Retailers.target.getProductInfo import Target
