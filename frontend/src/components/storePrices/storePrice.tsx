@@ -52,7 +52,7 @@ export const ListDetails = () => {
   const [listItems, setListItems] = useState([]);
   const { listId } = useParams();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   let { listName } = location.state;
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const ListDetails = () => {
       .finally(() => {
         setIsLoading(false);
       });
-    setIsLoading(false);
+    // setIsLoading(false);
   }, []);
 
   return (

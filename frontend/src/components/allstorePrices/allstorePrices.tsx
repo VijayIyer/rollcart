@@ -12,8 +12,6 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 interface itemDetails {
   item_name: string;
@@ -110,9 +108,10 @@ const AllStorePrices = () => {
                   )}
                 </div>
                 {cheapestStore === parseFloat(ele.total_price) && parseFloat(ele.total_price) > 0 && <div className="stack-top">Cheapest</div>}
-                {nearestStore === parseFloat(ele.distanceInMiles) && ele.distanceInMiles && parseFloat(ele.distanceInMiles) > 0 && (
-                  <div className="stack-top">Nearest</div>
-                )}
+                {parseFloat(ele.total_price) > 0 &&
+                  nearestStore === parseFloat(ele.distanceInMiles) &&
+                  ele.distanceInMiles &&
+                  parseFloat(ele.distanceInMiles) > 0 && <div className="stack-top">Nearest</div>}
                 {ele.unavailableItems && ele?.unavailableItems.length === 0 && <div className="stack-top green">All available</div>}
               </div>
             ))}
@@ -132,20 +131,27 @@ interface individualStoreItem {
 
 export const IndividualStorePrices = ({ retailerSelected, listId, unavailableItems }: individualStoreItem) => {
   const [items, setItems] = useState([]);
-  const [isloading, setIsLoading] = useState(false);
+  const [isloading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (retailerSelected === '') {
       return;
     }
-    axios.get(`${listId}/${retailerSelected}/getPrices`).then(response => {
-      setItems(response.data);
-    });
+    setIsLoading(true);
+    axios
+      .get(`${listId}/${retailerSelected}/getPrices`)
+      .then(response => {
+        setItems(response.data);
+        setIsLoading(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [retailerSelected]);
 
   return (
     <div className="table">
-      {items.length > 0 || unavailableItems.length > 0 ? (
+      {isloading === false ? (
         <div>
           <div className="storeDetails">
             <div className="storeTableHeader">Items information in {retailerSelected}</div>

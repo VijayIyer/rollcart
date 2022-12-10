@@ -430,7 +430,7 @@ def getStorePrices(user, listId:int, storeName:str):
             print(storeId)
             userListId = session.query(UserList.user_list_id).filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).scalar()
             print(userListId)
-            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)            
+            userListItemIds = session.query(UserListItem.user_list_item_id).filter(UserListItem.user_list_id == userListId)
             print(list(userListItemIds))
             itemStorePrices = session.query(Price).join(UserListItem, UserListItem.user_list_item_id == Price.user_list_item_id) \
             .filter(and_(Price.user_list_item_id.in_(userListItemIds), Price.store_id==storeId))
