@@ -5,6 +5,7 @@ import decimal
 import geopy
 from geopy.distance import geodesic
 import pgeocode
+import logging
 
 params = config.Config.TARGET_PARAMS
 api_key = params["RAPIDAPI_KEY"]
@@ -61,7 +62,7 @@ class Target(Retailer):
 
                 return nearestStore
         except Exception as e:
-            print(e)
+            logging.exception("getNearestStore failed in target with following exception")
             return -1
     
         
@@ -80,8 +81,8 @@ class Target(Retailer):
         try:
             response = requests.request("GET", url, headers=headers, params=querystring)
         except Exception as e:
-            print(e)
-
+            logging.exception("getNearestStores failed in target with following exception")
+            return []
         return response.json()
 
 
@@ -120,6 +121,6 @@ class Target(Retailer):
                     }
                 )
         except Exception as e:
-            print(e)
+            logging.exception("getProductsInNearByStore failed in target with following exception")
             return []
         return result

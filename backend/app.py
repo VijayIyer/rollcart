@@ -8,7 +8,7 @@ from flask import Flask, request, make_response
 from Retailers.util import getUniqueItems
 from Retailers.kroger.getProductInfo import Kroger
 from Retailers.walmart.getProductinfo import Walmart
-from Retailers.walgreens.getProductInfo import *
+from Retailers.walgreens.getProductInfo import Walgreens
 from Retailers.target.getProductInfo import Target
 from Retailers.MockRetailer.getProductInfo import MockRetailer
 from flask_cors import CORS

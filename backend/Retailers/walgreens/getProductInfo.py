@@ -5,6 +5,7 @@ import re
 import pgeocode
 import requests
 from geopy.distance import geodesic
+import logging
 
 params = config.Config.WALGREENS_PARAMS
 BASE_URL = params["BASE_URL"]
@@ -79,40 +80,45 @@ class Walgreens(Retailer):
         return []
 
     def getNearestStore(self,userLocation,lat,long):
-        userData = self.dist.query_postal_code(userLocation)
-        userLat = userData.latitude
-        userLon = userData.longitude
-        if lat and long:
-            userLat = lat
-            userLon = long
-        stores = self.getNearestStores(userLat,userLon)
-        
-        if len(stores) > 0:
-            nearestStore = {
-                    "storeName" : "",
-                    "storeId" : "",
-                    "currDistance" : "",
-                    "Latitude" : "",
-                    "Longitude" : ""
-                }
-            # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
-            nearestDistance = float("inf")
-            for store in stores:
-                curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
-                store['curDistance'] = curDistance
-                if curDistance < nearestDistance:
-                    nearestDistance = curDistance
-                    nearestStore = {
-                            "storeName" : "",
-                            "storeId" : store["store"]["storeNumber"],
-                            "currDistance" : nearestDistance,
-                            "latitude" : store['latitude'],
-                            "longitude" : store['longitude']
-                        }
+        try:
+          userData = self.dist.query_postal_code(userLocation)
+          userLat = userData.latitude
+          userLon = userData.longitude
+          if lat and long:
+              userLat = lat
+              userLon = long
+          stores = self.getNearestStores(userLat,userLon)
 
-            return nearestStore
-        
-        return -1
+          if len(stores) > 0:
+              nearestStore = {
+                      "storeName" : "",
+                      "storeId" : "",
+                      "currDistance" : "",
+                      "Latitude" : "",
+                      "Longitude" : ""
+                  }
+              # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
+              nearestDistance = float("inf")
+              for store in stores:
+                  curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
+                  store['curDistance'] = curDistance
+                  if curDistance < nearestDistance:
+                      nearestDistance = curDistance
+                      nearestStore = {
+                              "storeName" : "",
+                              "storeId" : store["store"]["storeNumber"],
+                              "currDistance" : nearestDistance,
+                              "latitude" : store['latitude'],
+                              "longitude" : store['longitude']
+                          }
+
+              return nearestStore
+
+          return -1
+        except Exception as e:
+          logging.exception("getNearestStore failed in walgreens with following exception")
+          return -1
+
         
     def getCorrectPrice(self, priceString: str):
         lowestPrice = float("inf")
@@ -121,7 +127,7 @@ class Walgreens(Retailer):
             for group in results:
                 if float(group) < lowestPrice:
                     lowestPrice = float(group)
-        except:
+        except Exception as e:
             # replace with logger
             print("no price string found")
         return -1 if lowestPrice == float("inf") else lowestPrice
@@ -146,10 +152,11 @@ class Walgreens(Retailer):
                     # print(data["products"])
                     for product in resp.data["products"]:
                         productInfo = product["productInfo"]
-                        if "storeInv" in productInfo.keys():
-                            if productInfo["storeInv"] == IN_STOCK:
-                                # this is where desired fields can be added
-                                products.append(Item(itemName=productInfo["productName"],
+                        if "storeInv" not in productInfo.keys() and productInfo["storeInv"] != IN_STOCK:
+                            print("request to {} failed".format(
+                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
+                            return []
+                        products.append(Item(itemName=productInfo["productName"],
                                                     itemId=productInfo["upc"],
                                                     itemPrice=self.getCorrectPrice(
                                     productInfo["priceInfo"]["regularPrice"]),
@@ -158,10 +165,6 @@ class Walgreens(Retailer):
                                     productPageUrl=BASE_URL+productInfo["productURL"])
                                 )
                     return products
-                else:
-                    print("request to {} failed".format(
-                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
-                    return []
         except Exception as e:
-            print(e)
+            logging.exception("getProductsInNearByStore failed in walgreens with following exception")
             return []
