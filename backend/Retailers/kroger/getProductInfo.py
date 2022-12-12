@@ -1,17 +1,10 @@
-
-
 import json
-
 import os,base64
-import requests
-import logging
 from Retailers import config
 from geopy.distance import geodesic
 import pgeocode
-
 import requests
-
-
+from Retailers.util import logExceptionInRetailerClass
 from getProductPrices import Retailer
 
 
@@ -93,61 +86,53 @@ class Kroger(Retailer):
           return itemsretrived
         return []
       except Exception as e:
-        logging.exception("getProducInNearbyStores failed in Kroger with following exception")
+        logExceptionInRetailerClass("getProductsInNearByStore", str(self))
         return []
 
   def getNearestStores(self,zipcode : str,lat,long):
     apiurl = STORESEARCHURL
-    
     try:
-      # exact_response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
-      # if lat and long:
-      # response = requests.get(apiurl,params={'filter.zipCode.near':int(zipcode),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       exact_response = requests.get(apiurl,params={'filter.lat.near':float(lat),'filter.lon.near':float(long),'filter.chain':'Kroger','filter.limit':1},headers=self.__header)
       stores_lat_long = exact_response.json()
       return stores_lat_long['data']
     except Exception as e:
-      logging.exception("getNearestStores failed in Kroger with following exception")
+      logExceptionInRetailerClass("getNearestStores", str(self))
       return -1
 
   def getNearestStore(self,zipcode : str,lat,long):
-
     try:
       if not(lat and long):
-            userData = self.dist.query_postal_code(zipcode)
-            lat = userData.latitude
-            long = userData.longitude
-          stores = self.getNearestStores(zipcode,lat,long)
-          if stores != -1:
-            nearestStore = {
-                "storeName" : "",
-                "storeId" : "",
-                "currDistance" : "",
-                "Latitude" : "",
-                "Longitude" : ""
-              }
-            # storeGeolocation = nearestStore['geolocation']
-            # nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
-            nearestDistance = float('inf')
+        userData = self.dist.query_postal_code(zipcode)
+        lat = userData.latitude
+        long = userData.longitude
+      stores = self.getNearestStores(zipcode,lat,long)
+      if stores == -1:
+        return -1
+      nearestStore = {
+          "storeName" : "",
+          "storeId" : "",
+          "currDistance" : "",
+          "Latitude" : "",
+          "Longitude" : ""
+        }
+      nearestDistance = float('inf')
 
-            for store in stores:
-              store_location = store['geolocation']
-              curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
-              store['curDistance'] = curDistance
-              if curDistance < nearestDistance:
-                nearestDistance = curDistance
-                nearestStore = {
-                  "storeName" : store['name'],
-                  "storeId" : store['locationId'],
-                  "currDistance" : nearestDistance,
-                  "latitude" : store_location['latitude'],
-                  "longitude" : store_location['longitude']
-                }
-
-            return nearestStore
-      return -1
+      for store in stores:
+        store_location = store['geolocation']
+        curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
+        store['curDistance'] = curDistance
+        if curDistance < nearestDistance:
+          nearestDistance = curDistance
+          nearestStore = {
+            "storeName" : store['name'],
+            "storeId" : store['locationId'],
+            "currDistance" : nearestDistance,
+            "latitude" : store_location['latitude'],
+            "longitude" : store_location['longitude']
+          }
+      return nearestStore
     except Exception as e:
-      logging.exception("getNearestStore failed in Kroger with following exception")
+      logExceptionInRetailerClass("getNearestStore", str(self))
       return -1
 
         
