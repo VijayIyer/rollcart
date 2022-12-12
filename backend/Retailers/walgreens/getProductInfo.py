@@ -153,7 +153,7 @@ class Walgreens(Retailer):
                 products = []
                 for product in resp.data["products"]:
                     productInfo = product["productInfo"]
-                    if "storeInv" not in productInfo.keys() and productInfo["storeInv"] != IN_STOCK:
+                    if "storeInv" not in productInfo.keys() or productInfo["storeInv"] != IN_STOCK:
                         print("request to {} failed".format(
                     WALGREENS_PRODUCTSEARCH_ENDPOINT))
                         return []
