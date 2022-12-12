@@ -95,27 +95,14 @@ class Walgreens(Retailer):
           
           stores = self.getNearestStores(userLat,userLon)
           if len(stores) > 0:
-              nearestStore = {
-                      "storeName" : "",
-                      "storeId" : "",
-                      "currDistance" : "",
-                      "Latitude" : "",
-                      "Longitude" : ""
-                  }
-              nearestDistance = float("inf")
-              for store in stores:
-                  curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
-                  store['curDistance'] = curDistance
-                  if curDistance < nearestDistance:
-                      nearestDistance = curDistance
-                      nearestStore = {
-                              "storeName" : "",
-                              "storeId" : store["store"]["storeNumber"],
-                              "currDistance" : nearestDistance,
-                              "latitude" : store['latitude'],
-                              "longitude" : store['longitude']
-                          }
-              return nearestStore
+              minStore =  min(stores, key=lambda store:geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles)
+              return {
+                "storeName" : "",
+                "storeId" : minStore["store"]["storeNumber"],
+                "currDistance" : geodesic((minStore['latitude'], minStore['longitude']), (userLat, userLon)).miles,
+                "latitude" : minStore['latitude'],
+                "longitude" : minStore['longitude']
+              }
 
           return -1
         except Exception as e:
@@ -149,10 +136,10 @@ class Walgreens(Retailer):
                 if not resp.success:
                     return []
                 products = []
-                for product in resp.data["products"]:
+                for product in filter(lambda product:"storeInv" in product["productInfo"].keys() and product["productInfo"]["storeInv"] == IN_STOCK,\
+                    resp.data["products"]):
                     productInfo = product["productInfo"]
-                    if "storeInv" in productInfo.keys() and productInfo["storeInv"] == IN_STOCK:
-                        products.append(Item(itemName=productInfo["productName"],
+                    products.append(Item(itemName=productInfo["productName"],
                                                 itemId=productInfo["upc"],
                                                 itemPrice=self.getCorrectPrice(
                                 productInfo["priceInfo"]["regularPrice"]),
