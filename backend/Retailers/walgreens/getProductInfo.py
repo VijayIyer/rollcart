@@ -94,7 +94,6 @@ class Walgreens(Retailer):
             userLon = userData.longitude
           
           stores = self.getNearestStores(userLat,userLon)
-
           if len(stores) > 0:
               nearestStore = {
                       "storeName" : "",
@@ -116,7 +115,6 @@ class Walgreens(Retailer):
                               "latitude" : store['latitude'],
                               "longitude" : store['longitude']
                           }
-
               return nearestStore
 
           return -1
@@ -153,11 +151,8 @@ class Walgreens(Retailer):
                 products = []
                 for product in resp.data["products"]:
                     productInfo = product["productInfo"]
-                    if "storeInv" not in productInfo.keys() or productInfo["storeInv"] != IN_STOCK:
-                        print("request to {} failed".format(
-                    WALGREENS_PRODUCTSEARCH_ENDPOINT))
-                        return []
-                    products.append(Item(itemName=productInfo["productName"],
+                    if "storeInv" in productInfo.keys() and productInfo["storeInv"] == IN_STOCK:
+                        products.append(Item(itemName=productInfo["productName"],
                                                 itemId=productInfo["upc"],
                                                 itemPrice=self.getCorrectPrice(
                                 productInfo["priceInfo"]["regularPrice"]),
