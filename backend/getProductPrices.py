@@ -13,7 +13,10 @@ class Retailer(ABC):
     # @abstractmethod
     # def getNearestStoreId(self, zipcode: str) -> str:
     #     pass
-
+    @abstractmethod
+    def getNearestStore(self, product: str, zipcode: str) -> List[Item]:
+        pass
+    
     @abstractmethod
     def getProductsInNearByStore(self, product: str, zipcode: str) -> List[Item]:
         # Sample response
