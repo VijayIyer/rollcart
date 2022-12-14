@@ -1,11 +1,11 @@
 from Retailers import config
 from getProductPrices import Retailer
+from Retailers.util import logExceptionInRetailerClass
 import requests
 import decimal
 import geopy
 from geopy.distance import geodesic
 import pgeocode
-import logging
 
 params = config.Config.TARGET_PARAMS
 api_key = params["RAPIDAPI_KEY"]
@@ -36,14 +36,14 @@ class Target(Retailer):
                 userData = self.dist.query_postal_code(userLocation)
                 lat = userData.latitude
                 long = userData.longitude
-            # r = geo_locator.reverse((lat, long))
-            # userLocation = r.raw['address']['postcode']
             stores = self.getNearestStores(userLocation,lat,long)
             if len(stores) > 0 and len(stores[0]['locations']) > 0:
+
                 
                 # nearestStore = stores[0]["locations"][0]
                 # nearestStore_geographic = nearestStore['geographic_specifications']
                 # nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
+
                 nearestDistance = float("inf")
 
                 for store in stores[0]['locations']:
@@ -59,12 +59,12 @@ class Target(Retailer):
                             "latitude" : geographic['latitude'],
                             "longitude" : geographic['longitude']
                         }
-
-
                 return nearestStore
         except Exception as e:
-            logging.exception("getNearestStore failed in target with following exception")
+
+            logExceptionInRetailerClass("getNearestStore", str(self))
             return nearestStore
+
     
         
 
@@ -81,11 +81,11 @@ class Target(Retailer):
 
         try:
             response = requests.request("GET", url, headers=headers, params=querystring)
+            return response.json()
         except Exception as e:
-            logging.exception("getNearestStores failed in target with following exception")
+            logExceptionInRetailerClass("getNearestStores", str(self))
             return []
-        return response.json()
-
+        
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
         try:
@@ -121,7 +121,8 @@ class Target(Retailer):
                         "productPageUrl": product_matches[i]["item"]["enrichment"]["buy_url"]
                     }
                 )
+            return result
         except Exception as e:
-            logging.exception("getProductsInNearByStore failed in target with following exception")
+            logExceptionInRetailerClass("getProductsInNearByStore", str(self))
             return []
-        return result
+                 

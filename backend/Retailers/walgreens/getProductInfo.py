@@ -5,7 +5,7 @@ import re
 import pgeocode
 import requests
 from geopy.distance import geodesic
-import logging
+from Retailers.util import logExceptionInRetailerClass
 
 params = config.Config.WALGREENS_PARAMS
 BASE_URL = params["BASE_URL"]
@@ -22,9 +22,8 @@ class requestResult:
 
 
 def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requestResult:
-    # print(WALGREENS_STORESEARCH_ENDPOINT)
-
-    data = {
+    try:
+        data = {
         "lat": lat,
         "lng": long,
         "p": "1",
@@ -33,35 +32,38 @@ def getStoreLocatorRequestResults(lat: str, long: str, radius: int = 10) -> requ
         "requestor": "headerui",
         "sameday": "true",
     }
-    resp = requests.post(url=WALGREENS_STORESEARCH_ENDPOINT, data=data)
-    # print(resp.status_code)
-    if resp.status_code == 200:
-        return requestResult(True, resp.json())
-    else:
-        print("request to {} failed".format(WALGREENS_STORESEARCH_ENDPOINT))
+        resp = requests.post(url=WALGREENS_STORESEARCH_ENDPOINT, data=data)
+        if resp.status_code == 200:
+            return requestResult(True, resp.json())
+        return requestResult(False, dict())
+    except Exception as e:
+        logExceptionInRetailerClass("getStoreLocatorRequestResults", "walgreens")
         return requestResult(False, dict())
 
 
 def getProductSearchResults(url: str, search_term: str, store_number: str) -> requestResult:
-    data = {
-            "p": "1",
-            "s": "72",
-            "sort": "relevance",
-            "view": "allView",
-            "geoTargetEnabled": "true",
-            "q": str(search_term),
-            "requestType": "search",
-            "deviceType": "desktop",
-            "includeDrug": "true",
-            "inStore": "true",
-            "storeId": str(store_number),
-            "searchTerm": str(search_term)
-        }
-    resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
-                             json=data)
-    if resp.status_code == 200:
-        return requestResult(True, resp.json())
-    else:
+    try:
+        data = {
+                "p": "1",
+                "s": "72",
+                "sort": "relevance",
+                "view": "allView",
+                "geoTargetEnabled": "true",
+                "q": str(search_term),
+                "requestType": "search",
+                "deviceType": "desktop",
+                "includeDrug": "true",
+                "inStore": "true",
+                "storeId": str(store_number),
+                "searchTerm": str(search_term)
+            }
+        resp = requests.post(WALGREENS_PRODUCTSEARCH_ENDPOINT,
+                                json=data)
+        if resp.status_code == 200:
+            return requestResult(True, resp.json())
+        return requestResult(False, dict())
+    except Exception as e:
+        logExceptionInRetailerClass("getProductSearchResults", "walgreens")
         return requestResult(False, dict())
 
 
@@ -73,11 +75,13 @@ class Walgreens(Retailer):
         return 'Walgreens'
 
     def getNearestStores(self,userLat,userLon):
-        storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
-        if storeLocatorResults.success:
-            return storeLocatorResults.data["results"]
-
-        return []
+        try:
+            storeLocatorResults = getStoreLocatorRequestResults(userLat, userLon)
+            if storeLocatorResults.success:
+                return storeLocatorResults.data["results"]
+        except Exception as e:
+            logExceptionInRetailerClass("getNearestStores", str(self))
+            return []
 
     def getNearestStore(self,userLocation,lat,long):
         nearestStore = {
@@ -88,37 +92,32 @@ class Walgreens(Retailer):
                       "longitude" : -1
                   }
         try:
-          userData = self.dist.query_postal_code(userLocation)
-          userLat = userData.latitude
-          userLon = userData.longitude
           if lat and long:
-              userLat = lat
-              userLon = long
+            userLat = lat
+            userLon = long
+          else:
+            userData = self.dist.query_postal_code(userLocation)
+            userLat = userData.latitude
+            userLon = userData.longitude
+          
           stores = self.getNearestStores(userLat,userLon)
-
           if len(stores) > 0:
-              
-              # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
-              nearestDistance = float("inf")
-              for store in stores:
-                  curDistance = geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles
-                  store['curDistance'] = curDistance
-                  if curDistance < nearestDistance:
-                      nearestDistance = curDistance
-                      nearestStore = {
-                              "storeName" : "",
-                              "storeId" : store["store"]["storeNumber"],
-                              "currDistance" : nearestDistance,
-                              "latitude" : store['latitude'],
-                              "longitude" : store['longitude']
-                          }
 
-              return nearestStore
+              minStore =  min(stores, key=lambda store:geodesic((store['latitude'], store['longitude']), (userLat, userLon)).miles)
+              return {
+                "storeName" : "",
+                "storeId" : minStore["store"]["storeNumber"],
+                "currDistance" : geodesic((minStore['latitude'], minStore['longitude']), (userLat, userLon)).miles,
+                "latitude" : minStore['latitude'],
+                "longitude" : minStore['longitude']
+              }
 
           return nearestStore
         except Exception as e:
-          logging.exception("getNearestStore failed in walgreens with following exception")
+
+          logExceptionInRetailerClass("getNearestStore", str(self))
           return nearestStore
+
 
         
     def getCorrectPrice(self, priceString: str):
@@ -128,44 +127,37 @@ class Walgreens(Retailer):
             for group in results:
                 if float(group) < lowestPrice:
                     lowestPrice = float(group)
+            return lowestPrice
         except Exception as e:
-            # replace with logger
-            print("no price string found")
-        return -1 if lowestPrice == float("inf") else lowestPrice
+            logExceptionInRetailerClass("getCorrectPrice", str(self))
+            return -1
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
         try:
             storeNumber = self.getNearestStore(zipcode,lat,long)['storeId']
             # failed to find nearby store to this zipcode
             if storeNumber == -1:
-                print("unsuccessful store search request")
+                print("walgreens product search : store not found")
                 return []
             else:
                 resp = getProductSearchResults(url=WALGREENS_PRODUCTSEARCH_ENDPOINT,
                                             search_term=product,
                                             store_number=storeNumber)
-                if resp.success:
-                    # list in which resulting products will be appended
-                    products = []
-
-                    # replace with logger
-                    # print(len(data["products"]))
-                    # print(data["products"])
-                    for product in resp.data["products"]:
-                        productInfo = product["productInfo"]
-                        if "storeInv" not in productInfo.keys() and productInfo["storeInv"] != IN_STOCK:
-                            print("request to {} failed".format(
-                        WALGREENS_PRODUCTSEARCH_ENDPOINT))
-                            return []
-                        products.append(Item(itemName=productInfo["productName"],
-                                                    itemId=productInfo["upc"],
-                                                    itemPrice=self.getCorrectPrice(
-                                    productInfo["priceInfo"]["regularPrice"]),
-                                    itemThumbnail="http:" +
-                                    productInfo["imageUrl"],
-                                    productPageUrl=BASE_URL+productInfo["productURL"])
-                                )
-                    return products
+                if not resp.success:
+                    return []
+                products = []
+                for product in filter(lambda product:"storeInv" in product["productInfo"].keys() and product["productInfo"]["storeInv"] == IN_STOCK,\
+                    resp.data["products"]):
+                    productInfo = product["productInfo"]
+                    products.append(Item(itemName=productInfo["productName"],
+                                                itemId=productInfo["upc"],
+                                                itemPrice=self.getCorrectPrice(
+                                productInfo["priceInfo"]["regularPrice"]),
+                                itemThumbnail="http:" +
+                                productInfo["imageUrl"],
+                                productPageUrl=BASE_URL+productInfo["productURL"])
+                            )
+                return products
         except Exception as e:
-            logging.exception("getProductsInNearByStore failed in walgreens with following exception")
+            logExceptionInRetailerClass("getProductsInNearByStore", str(self))
             return []
