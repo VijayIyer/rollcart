@@ -102,35 +102,40 @@ class Kroger(Retailer):
   def getNearestStore(self,zipcode : str,lat,long):
     try:
       if not(lat and long):
-        userData = self.dist.query_postal_code(zipcode)
-        lat = userData.latitude
-        long = userData.longitude
-      stores = self.getNearestStores(zipcode,lat,long)
-      if stores == -1:
-        return -1
-      nearestStore = {
-          "storeName" : "",
-          "storeId" : "",
-          "currDistance" : "",
-          "Latitude" : "",
-          "Longitude" : ""
-        }
-      nearestDistance = float('inf')
 
-      for store in stores:
-        store_location = store['geolocation']
-        curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
-        store['curDistance'] = curDistance
-        if curDistance < nearestDistance:
-          nearestDistance = curDistance
-          nearestStore = {
-            "storeName" : store['name'],
-            "storeId" : store['locationId'],
-            "currDistance" : nearestDistance,
-            "latitude" : store_location['latitude'],
-            "longitude" : store_location['longitude']
-          }
-      return nearestStore
+            userData = self.dist.query_postal_code(zipcode)
+            lat = userData.latitude
+            long = userData.longitude
+            stores = self.getNearestStores(zipcode,lat,long)
+            if stores != -1:
+              nearestStore = {
+                  "storeName" : "",
+                  "storeId" : "",
+                  "currDistance" : "",
+                  "Latitude" : "",
+                  "Longitude" : ""
+                }
+              # storeGeolocation = nearestStore['geolocation']
+              # nearestDistance = geodesic((storeGeolocation['latitude'], storeGeolocation['longitude']), (lat,long)).miles
+              nearestDistance = float('inf')
+
+              for store in stores:
+                store_location = store['geolocation']
+                curDistance = geodesic((store_location['latitude'], store_location['longitude']), (lat,long)).miles
+                store['curDistance'] = curDistance
+                if curDistance < nearestDistance:
+                  nearestDistance = curDistance
+                  nearestStore = {
+                    "storeName" : store['name'],
+                    "storeId" : store['locationId'],
+                    "currDistance" : nearestDistance,
+                    "latitude" : store_location['latitude'],
+                    "longitude" : store_location['longitude']
+                  }
+
+              return nearestStore
+      return -1
+
     except Exception as e:
       logExceptionInRetailerClass("getNearestStore", str(self))
       return -1
