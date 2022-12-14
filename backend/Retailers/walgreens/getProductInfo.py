@@ -80,6 +80,13 @@ class Walgreens(Retailer):
         return []
 
     def getNearestStore(self,userLocation,lat,long):
+        nearestStore = {
+                      "storeName" : str(self),
+                      "storeId" : None,
+                      "currDistance" : -1,
+                      "latitude" : -1,
+                      "longitude" : -1
+                  }
         try:
           userData = self.dist.query_postal_code(userLocation)
           userLat = userData.latitude
@@ -90,13 +97,7 @@ class Walgreens(Retailer):
           stores = self.getNearestStores(userLat,userLon)
 
           if len(stores) > 0:
-              nearestStore = {
-                      "storeName" : "",
-                      "storeId" : "",
-                      "currDistance" : "",
-                      "Latitude" : "",
-                      "Longitude" : ""
-                  }
+              
               # nearestDistance = geodesic((nearestStore['latitude'], nearestStore['longitude']), (userLat, userLon)).miles
               nearestDistance = float("inf")
               for store in stores:
@@ -114,10 +115,10 @@ class Walgreens(Retailer):
 
               return nearestStore
 
-          return -1
+          return nearestStore
         except Exception as e:
           logging.exception("getNearestStore failed in walgreens with following exception")
-          return -1
+          return nearestStore
 
         
     def getCorrectPrice(self, priceString: str):

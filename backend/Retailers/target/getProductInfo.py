@@ -24,6 +24,13 @@ class Target(Retailer):
         return 'Target'
 
     def getNearestStore(self,userLocation,lat,long):
+        nearestStore = {
+                    "storeName" : str(self),
+                    "storeId" : None,
+                    "currDistance" : -1,
+                    "latitude" : -1,
+                    "longitude" : -1
+                }
         try:
             if not(lat and long):
                 userData = self.dist.query_postal_code(userLocation)
@@ -33,13 +40,7 @@ class Target(Retailer):
             # userLocation = r.raw['address']['postcode']
             stores = self.getNearestStores(userLocation,lat,long)
             if len(stores) > 0 and len(stores[0]['locations']) > 0:
-                nearestStore = {
-                    "storeName" : "",
-                    "storeId" : "",
-                    "currDistance" : "",
-                    "Latitude" : "",
-                    "Longitude" : ""
-                }
+                
                 # nearestStore = stores[0]["locations"][0]
                 # nearestStore_geographic = nearestStore['geographic_specifications']
                 # nearestDistance = geodesic((nearestStore_geographic['latitude'],nearestStore_geographic['longitude']),(lat,long)).miles
@@ -63,7 +64,7 @@ class Target(Retailer):
                 return nearestStore
         except Exception as e:
             logging.exception("getNearestStore failed in target with following exception")
-            return -1
+            return nearestStore
     
         
 

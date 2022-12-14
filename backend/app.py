@@ -429,7 +429,6 @@ def getPrices(user, listId:int):
             nearestStore = {}
             for retailer in retailers:
                 nearestStore[str(retailer)] = retailer.getNearestStore(zip, lat, long)
-            
             retailerPriceTotals = [{'store_name':str(retailer), 'total_price':0, 'unavailableItems':[], 'distanceInMiles':nearestStore[str(retailer)]['currDistance'], 'latitude' : nearestStore[str(retailer)]['latitude'],'longitude' : nearestStore[str(retailer)]['longitude']}\
                  for retailer in retailers]
             storeIds = {str(retailer):session.query(Store.store_id).filter(Store.store_name == str(retailer)).scalar() for retailer in retailers}

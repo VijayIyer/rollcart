@@ -34,7 +34,13 @@ class Walmart(Retailer):
             lat = userData.latitude
             long = userData.longitude
 
-        nearestStore = -1
+        nearestStore = {
+                      "storeName" : str(self),
+                      "storeId" : None,
+                      "currDistance" : -1,
+                      "latitude" : -1,
+                      "longitude" : -1
+                  }
         nearestDistance = float("inf")
 
         for store in self.walmartStoreData:
