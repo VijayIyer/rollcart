@@ -26,7 +26,7 @@ class Target(Retailer):
     def getNearestStore(self,userLocation,lat,long):
         nearestStore = {
                     "storeName" : str(self),
-                    "storeId" : None,
+                    "storeId" : -1,
                     "currDistance" : -1,
                     "latitude" : -1,
                     "longitude" : -1

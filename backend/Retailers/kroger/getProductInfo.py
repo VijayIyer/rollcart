@@ -113,7 +113,7 @@ class Kroger(Retailer):
   def getNearestStore(self,zipcode : str,lat,long):
         nearestStore = {
                           "storeName" : str(self),
-                          "storeId" : None,
+                          "storeId" : -1,
                           "currDistance" : -1,
                           "latitude" : -1,
                           "longitude" : -1

@@ -36,7 +36,7 @@ class Walmart(Retailer):
 
         nearestStore = {
                       "storeName" : str(self),
-                      "storeId" : None,
+                      "storeId" : -1,
                       "currDistance" : -1,
                       "latitude" : -1,
                       "longitude" : -1
