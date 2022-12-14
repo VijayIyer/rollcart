@@ -5,6 +5,7 @@ from serpapi import GoogleSearch
 import pgeocode
 from geopy.distance import geodesic
 import csv
+from Retailers.util import logExceptionInRetailerClass
 
 params = config.Config.WALMART_PARAMS
 api_key = params["API_KEY"]
@@ -29,31 +30,35 @@ class Walmart(Retailer):
         } 
 
     def getNearestStore(self,zipcode, lat, long):
-        if not(lat and long):
-            userData = self.dist.query_postal_code(zipcode)
-            lat = userData.latitude
-            long = userData.longitude
+        try:
+            if not(lat and long):
+                userData = self.dist.query_postal_code(zipcode)
+                lat = userData.latitude
+                long = userData.longitude
 
-        nearestStore = -1
-        nearestDistance = float("inf")
+            nearestStore = -1
+            nearestDistance = float("inf")
 
-        for store in self.walmartStoreData:
-            # storeLon, storeLat, storeId, storeName, storePostalCode = store
-            new_store = {
-                "latitude" : store['Y'],
-                "longitude" : store['X'],
-                "storeId" : store['businessunit_number'],
-                "storeName" : store['businessunit_name'],
-                "storePostalCode" : store['postal_code']
-            }
-            if zipcode[0:2] == str(new_store['storePostalCode'])[0:2]:
-                curDistance = geodesic((new_store['latitude'], new_store['longitude']), (lat, long)).miles
-                if curDistance < nearestDistance:
-                    nearestDistance = curDistance
-                    nearestStore = new_store
-                    nearestStore['currDistance'] = nearestDistance
+            for store in self.walmartStoreData:
+                # storeLon, storeLat, storeId, storeName, storePostalCode = store
+                new_store = {
+                    "latitude" : store['Y'],
+                    "longitude" : store['X'],
+                    "storeId" : store['businessunit_number'],
+                    "storeName" : store['businessunit_name'],
+                    "storePostalCode" : store['postal_code']
+                }
+                if zipcode[0:2] == str(new_store['storePostalCode'])[0:2]:
+                    curDistance = geodesic((new_store['latitude'], new_store['longitude']), (lat, long)).miles
+                    if curDistance < nearestDistance:
+                        nearestDistance = curDistance
+                        nearestStore = new_store
+                        nearestStore['currDistance'] = nearestDistance
 
-        return nearestStore
+            return nearestStore
+        except Exception as e:
+            logExceptionInRetailerClass("getNearestStore", str(self))
+            return -1
 
     def getProductsInNearByStore(self, product, zipcode,lat,long):
         try:
@@ -77,6 +82,6 @@ class Walmart(Retailer):
             print("Store id using is",self.params["store_id"])
             return response
         except Exception as e:
-            print(e)
+            logExceptionInRetailerClass("getProductsInNearByStore", str(self))
             return []
 
