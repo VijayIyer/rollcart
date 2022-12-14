@@ -342,7 +342,7 @@ def addItem(user, listId:int):
                     filter(and_(UserList.user_id == user.user_id, UserList.list_id == listId)).\
                         first()
             if session.query(Item).filter(Item.item_name == body['item_name']).count() == 0:
-                newItem = Item(item_name = body['item_name'], item_thumbnail = body['item_thumbnail'])
+                newItem = Item(item_name = body['item_name'])
                 session.add(newItem)
                 session.flush()
                 returnItemId = newItem.item_id
