@@ -26,6 +26,9 @@ from flask.logging import default_handler
 from logging.config import dictConfig
 import os
 
+if not os.path.exists('logs'):
+    os.mkdir('logs')
+
 dictConfig(
     {
         "version": 1,
