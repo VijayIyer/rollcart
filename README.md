@@ -1,4 +1,4 @@
-Note : This is a copy of the repository from Fall 2022 semester during a Master's Degree course. Edits need to be made to make this app functioning again.
+_Note : This is a copy of the repository from Fall 2022 semester during a Master's Degree course. Edits need to be made to make this app functioning again._
 
 # Welcome to the rollcart app wiki
 
