@@ -1,3 +1,5 @@
+Note : This is a copy of the repository from Fall 2022 semester during a Master's Degree course. Edits need to be made to make this app functioning again.
+
 # Welcome to the rollcart app wiki
 
 ## What is our product?
